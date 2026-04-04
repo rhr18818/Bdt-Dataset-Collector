@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import {
   LayoutDashboard, Camera, Tag, ShieldCheck, Users, Download,
-  Settings, Menu, X, ChevronRight
+  Settings, Menu, X, ChevronRight, LogOut
 } from 'lucide-react';
 
 const MAIN_NAV = [
@@ -18,14 +18,22 @@ const ADMIN_NAV = [
 
 export default function Layout({ activeView, setActiveView, totalCollected, onAddImages, currentUser, onLogout, children }) {
   const [sidebarOpen, setSidebarOpen] = useState(true);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const today = new Date().toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' });
   const pct = Math.round((totalCollected / 26000) * 100);
   const isLead = currentUser?.role === 'lead';
 
   return (
     <div className="flex h-screen overflow-hidden" style={{ background: 'var(--bg-surface)' }}>
-      {/* SIDEBAR — desktop */}
-      <aside className={`hidden md:flex flex-col sidebar-transition flex-shrink-0 ${sidebarOpen ? 'w-56' : 'w-16'}`}
+      {/* Mobile Backdrop */}
+      {mobileMenuOpen && (
+        <div className="md:hidden fixed inset-0 z-40 bg-black/50" onClick={() => setMobileMenuOpen(false)} />
+      )}
+
+      {/* SIDEBAR — desktop & mobile drawer */}
+      <aside className={`fixed md:relative z-50 h-full flex flex-col sidebar-transition flex-shrink-0 
+        ${sidebarOpen ? 'w-56' : 'w-16'}
+        ${mobileMenuOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'}`}
         style={{ background: 'var(--bg-primary)', borderRight: '1px solid #1e2333' }}>
         {/* Logo */}
         <div className="flex items-center gap-3 px-4 py-5 border-b" style={{ borderColor: '#1e2333' }}>
@@ -51,7 +59,7 @@ export default function Layout({ activeView, setActiveView, totalCollected, onAd
           {MAIN_NAV.map(({ id, label, icon: Icon }) => {
             const active = activeView === id;
             return (
-              <button key={id} onClick={() => setActiveView(id)}
+              <button key={id} onClick={() => { setActiveView(id); setMobileMenuOpen(false); }}
                 className={`flex items-center gap-3 rounded-lg px-2 py-2.5 w-full text-left transition-all ${active ? 'font-semibold' : 'hover:bg-white/5'}`}
                 style={{
                   background: active ? 'rgba(37,99,235,0.25)' : 'transparent',
@@ -70,7 +78,7 @@ export default function Layout({ activeView, setActiveView, totalCollected, onAd
               {ADMIN_NAV.map(({ id, label, icon: Icon }) => {
                 const active = activeView === id;
                 return (
-                  <button key={id} onClick={() => setActiveView(id)}
+                  <button key={id} onClick={() => { setActiveView(id); setMobileMenuOpen(false); }}
                     className={`flex items-center gap-3 rounded-lg px-2 py-2.5 w-full text-left transition-all ${active ? 'font-semibold' : 'hover:bg-white/5'}`}
                     style={{
                       background: active ? 'rgba(37,99,235,0.25)' : 'transparent',
@@ -103,7 +111,7 @@ export default function Layout({ activeView, setActiveView, totalCollected, onAd
           )}
           
           {isLead && (
-            <button onClick={() => setActiveView('settings')}
+            <button onClick={() => { setActiveView('settings'); setMobileMenuOpen(false); }}
               className="flex items-center gap-3 w-full rounded-lg px-2 py-2.5 hover:bg-white/5 transition-colors"
               style={{ color: activeView === 'settings' ? 'var(--sidebar-active)' : 'var(--sidebar-text)' }}>
               <Settings size={17} />
@@ -127,7 +135,7 @@ export default function Layout({ activeView, setActiveView, totalCollected, onAd
         {/* TOP BAR */}
         <header className="flex items-center gap-3 px-4 md:px-6 py-3 border-b flex-shrink-0"
           style={{ background: '#fff', borderColor: 'var(--border)', zIndex: 10 }}>
-          <button className="md:hidden rounded-lg p-1.5 hover:bg-gray-100 transition-colors" onClick={() => {}}>
+          <button className="md:hidden rounded-lg p-1.5 hover:bg-gray-100 transition-colors" onClick={() => setMobileMenuOpen(true)}>
             <Menu size={20} style={{ color: 'var(--text-muted)' }} />
           </button>
           <div className="flex-1 flex items-center gap-3">
