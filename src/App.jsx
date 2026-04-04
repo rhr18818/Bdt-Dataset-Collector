@@ -1,5 +1,6 @@
 import { useReducer, useCallback, useState, useEffect } from 'react';
-import { loadState, reducer, INITIAL_STATE } from './data/reducer.js';
+import { loadState, reducer } from './data/reducer.js';
+import { INITIAL_STATE } from './data/seedData.js';
 import { useComputed } from './hooks/useComputed.js';
 import Layout from './components/Layout.jsx';
 import Dashboard from './components/Dashboard.jsx';
