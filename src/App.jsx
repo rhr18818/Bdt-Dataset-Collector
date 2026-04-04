@@ -1,5 +1,5 @@
 import { useReducer, useCallback, useState, useEffect } from 'react';
-import { loadState, reducer } from './data/reducer.js';
+import { loadState, reducer, INITIAL_STATE } from './data/reducer.js';
 import { useComputed } from './hooks/useComputed.js';
 import Layout from './components/Layout.jsx';
 import Dashboard from './components/Dashboard.jsx';
@@ -13,6 +13,9 @@ import QuickLogFAB from './components/QuickLogFAB.jsx';
 import Login from './components/Login.jsx';
 import { ToastContainer } from './components/ui/index.jsx';
 
+import { db } from './data/firebase.js';
+import { collection, doc, onSnapshot, setDoc } from 'firebase/firestore';
+
 let toastId = 0;
 
 export default function App() {
@@ -21,6 +24,32 @@ export default function App() {
   const [activeView, setActiveView] = useState('dashboard');
   const [toasts, setToasts] = useState([]);
   const [showSettings, setShowSettings] = useState(false);
+  const [dbConnected, setDbConnected] = useState(false);
+
+  // Firestore Synchronization
+  useEffect(() => {
+    // 1. Sync global metadata
+    const unsubMeta = onSnapshot(doc(db, "bdt_db", "metaState"), snap => {
+      if (snap.exists()) {
+        dispatch({ type: 'HYDRATE_META', payload: snap.data() });
+        setDbConnected(true);
+      } else {
+        // First ever launch — initialize the cloud DB
+        const { sessions, ...metaState } = INITIAL_STATE;
+        setDoc(doc(db, "bdt_db", "metaState"), metaState);
+      }
+    });
+
+    // 2. Sync all collection sessions (scalable to thousands of docs)
+    const unsubSessions = onSnapshot(collection(db, "bdt_sessions"), snap => {
+      const allSessions = snap.docs.map(d => d.data());
+      // Optional: Sort by timestamp if necessary
+      allSessions.sort((a,b) => a.timestamp.localeCompare(b.timestamp));
+      dispatch({ type: 'HYDRATE_SESSIONS', payload: allSessions });
+    });
+
+    return () => { unsubMeta(); unsubSessions(); };
+  }, []);
   
   // Auth state
   const [currentUserId, setCurrentUserId] = useState(() => localStorage.getItem('bdt_currentUser'));

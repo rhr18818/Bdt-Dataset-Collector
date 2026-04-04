@@ -1,6 +1,17 @@
 import { INITIAL_STATE } from './seedData.js';
+import { db } from './firebase.js';
+import { doc, setDoc, updateDoc, collection } from 'firebase/firestore';
 
 const STORAGE_KEY = 'bdtcollect_v1';
+
+let syncMetaTimeout;
+function syncMetaToFirebase(state) {
+  clearTimeout(syncMetaTimeout);
+  syncMetaTimeout = setTimeout(() => {
+    const { sessions, ...metaState } = state;
+    setDoc(doc(db, "bdt_db", "metaState"), metaState).catch(console.error);
+  }, 1000);
+}
 
 export function loadState() {
   try {
@@ -59,11 +70,19 @@ export function reducer(state, action) {
         notes: action.payload.notes || '',
         background: action.payload.background || '',
       };
+      
+      // Sync to Firebase
+      setDoc(doc(db, "bdt_sessions", session.id), session).catch(console.error);
+      
       next = { ...state, sessions: [...state.sessions, session] };
       break;
     }
 
     case 'UPDATE_SESSION_STATUS': {
+      updateDoc(doc(db, "bdt_sessions", action.payload.id), {
+        status: action.payload.status,
+      }).catch(console.error);
+      
       next = {
         ...state,
         sessions: state.sessions.map(s =>
@@ -149,8 +168,18 @@ export function reducer(state, action) {
       break;
     }
 
+    case 'HYDRATE_META': {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify({ ...state, ...action.payload }));
+      return { ...state, ...action.payload };
+    }
+
+    case 'HYDRATE_SESSIONS': {
+      return { ...state, sessions: action.payload };
+    }
+
     case 'RESET_ALL': {
       next = INITIAL_STATE;
+      syncMetaToFirebase(next);
       break;
     }
 
@@ -158,6 +187,13 @@ export function reducer(state, action) {
       return state;
   }
 
+  // Ensure local cache also updates to prevent flash on reload
   saveState(next);
+  
+  // Conditionally sync meta if the action wasn't a session update
+  if (!['ADD_SESSION', 'UPDATE_SESSION_STATUS', 'HYDRATE_META', 'HYDRATE_SESSIONS'].includes(action.type)) {
+    syncMetaToFirebase(next);
+  }
+  
   return next;
 }
