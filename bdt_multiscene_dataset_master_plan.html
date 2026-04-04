@@ -1,0 +1,437 @@
+
+<style>
+.nav{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:16px}
+.nb{padding:6px 13px;border:0.5px solid var(--color-border-secondary);border-radius:16px;background:var(--color-background-primary);color:var(--color-text-secondary);font-size:11px;cursor:pointer;transition:all .15s}
+.nb.on{background:var(--color-background-info);color:var(--color-text-info);border-color:var(--color-border-info)}
+.bd{font-size:13px;line-height:1.75}
+.bd h3{font-size:13px;font-weight:500;margin:14px 0 5px;border-bottom:0.5px solid var(--color-border-tertiary);padding-bottom:3px;color:var(--color-text-primary)}
+.bd p{margin:0 0 8px;color:var(--color-text-secondary);font-size:12px}
+.bd ul,ol{margin:0 0 8px;padding-left:16px;color:var(--color-text-secondary);font-size:12px}
+.bd li{margin-bottom:4px}
+.bd code{font-family:var(--font-mono);font-size:11px;background:var(--color-background-secondary);padding:1px 5px;border-radius:4px;color:var(--color-text-primary)}
+.info{border-left:3px solid var(--color-border-info);padding:8px 12px;background:var(--color-background-info);border-radius:0 6px 6px 0;margin:8px 0;font-size:11px;color:var(--color-text-info);line-height:1.6}
+.warn{border-left:3px solid var(--color-border-warning);padding:8px 12px;background:var(--color-background-warning);border-radius:0 6px 6px 0;margin:8px 0;font-size:11px;color:var(--color-text-warning);line-height:1.6}
+.ok{border-left:3px solid var(--color-border-success);padding:8px 12px;background:var(--color-background-success);border-radius:0 6px 6px 0;margin:8px 0;font-size:11px;color:var(--color-text-success);line-height:1.6}
+.tbl{width:100%;border-collapse:collapse;font-size:11px;margin:6px 0 12px}
+.tbl th{font-weight:500;color:var(--color-text-secondary);padding:6px 8px;text-align:left;border-bottom:0.5px solid var(--color-border-secondary);font-size:11px}
+.tbl td{padding:5px 8px;border-bottom:0.5px solid var(--color-border-tertiary);color:var(--color-text-primary);vertical-align:top;font-size:11px}
+.tbl tr:last-child td{border-bottom:none}
+.chip{display:inline-block;font-size:10px;padding:1px 7px;border-radius:8px;font-weight:500}
+.cg{background:var(--color-background-success);color:var(--color-text-success)}
+.cy{background:var(--color-background-warning);color:var(--color-text-warning)}
+.cr{background:var(--color-background-danger);color:var(--color-text-danger)}
+.cb{background:var(--color-background-info);color:var(--color-text-info)}
+.folder{background:var(--color-background-secondary);border-radius:8px;padding:10px 12px;font-family:var(--font-mono);font-size:11px;color:var(--color-text-primary);margin:8px 0;line-height:1.9}
+.cl-item{display:flex;align-items:flex-start;gap:8px;padding:5px 0;border-bottom:0.5px solid var(--color-border-tertiary);font-size:11px}
+.cl-item:last-child{border-bottom:none}
+.cl-box{width:14px;height:14px;border:0.5px solid var(--color-border-secondary);border-radius:3px;flex-shrink:0;margin-top:1px;background:var(--color-background-primary)}
+.cl-text{color:var(--color-text-secondary);line-height:1.5}
+.cl-num{font-size:10px;background:var(--color-background-secondary);color:var(--color-text-tertiary);padding:1px 5px;border-radius:8px;flex-shrink:0}
+</style>
+
+<div style="padding:0">
+<div class="nav">
+  <button class="nb on" onclick="show('novelty')">Novelty & gap analysis</button>
+  <button class="nb" onclick="show('arch')">Dataset architecture</button>
+  <button class="nb" onclick="show('single')">Single-note checklist</button>
+  <button class="nb" onclick="show('multi')">Multi-note checklist</button>
+  <button class="nb" onclick="show('sum')">Sum-folder system</button>
+  <button class="nb" onclick="show('occlusion')">Occlusion & conditions</button>
+  <button class="nb" onclick="show('annotation')">Annotation schema</button>
+  <button class="nb" onclick="show('folder')">Folder structure</button>
+  <button class="nb" onclick="show('paper')">Data in Brief paper guide</button>
+</div>
+<div id="content" class="bd"></div>
+</div>
+
+<script>
+const pages = {
+novelty:`
+<h3>Why this dataset is publishable — the gap no one has filled</h3>
+<div class="ok"><strong>Your core novelty in one sentence:</strong> Every existing BDT dataset contains only single-note scenes. Real-world transactions always involve multiple notes. No dataset addresses this — your dataset is the first.</div>
+
+<h3>Gap comparison with existing datasets</h3>
+<table class="tbl">
+<thead><tr><th>Dataset</th><th>Images</th><th>Multi-note scenes</th><th>Ground truth sum</th><th>Occlusion types</th><th>Environment variety</th></tr></thead>
+<tbody>
+<tr><td>NSTU-BDTAKA (2024)</td><td>28,875</td><td><span class="chip cr">None</span></td><td><span class="chip cr">None</span></td><td><span class="chip cy">Basic</span></td><td><span class="chip cy">Limited</span></td></tr>
+<tr><td>BanglaTaka / BanglaNotes (2025)</td><td>5,073</td><td><span class="chip cr">None</span></td><td><span class="chip cr">None</span></td><td><span class="chip cr">None</span></td><td><span class="chip cr">Controlled only</span></td></tr>
+<tr><td>Murad et al. dataset</td><td>8,000</td><td><span class="chip cr">None</span></td><td><span class="chip cr">None</span></td><td><span class="chip cr">None</span></td><td><span class="chip cy">Limited</span></td></tr>
+<tr><td><strong>Your dataset (proposed)</strong></td><td><strong>26,000+</strong></td><td><span class="chip cg">Core feature</span></td><td><span class="chip cg">Yes — per image</span></td><td><span class="chip cg">4 types</span></td><td><span class="chip cg">7 environments</span></td></tr>
+</tbody>
+</table>
+
+<h3>The three novelty claims for your Data in Brief submission</h3>
+<ol>
+<li><strong>First BDT dataset with multi-note scenes</strong> — 2 and 3 notes simultaneously in frame, reflecting actual payment transactions</li>
+<li><strong>Ground truth monetary sum annotation</strong> — each multi-note image has a ground truth total value (e.g., 100+50+20 = 170 BDT), enabling transaction-value evaluation that no prior dataset supports</li>
+<li><strong>Most environmentally diverse BDT dataset</strong> — 7 environments × 5 lighting conditions × 5 note conditions = 175 unique capture contexts vs. 2–3 in all prior work</li>
+</ol>
+
+<div class="warn"><strong>Important framing:</strong> Your dataset is the companion to your IEEE system paper. In Data in Brief, you describe HOW you collected it. In the IEEE paper, you use it to train and evaluate the system. Both papers cite each other. The dataset DOI (from Mendeley Data or Zenodo) is mandatory before you can submit to Data in Brief.</div>
+`,
+
+arch:`
+<h3>Complete dataset architecture — 26,000 images total</h3>
+<table class="tbl">
+<thead><tr><th>Category</th><th>Subcategory</th><th>Target images</th><th>Source</th><th>Priority</th></tr></thead>
+<tbody>
+<tr><td rowspan="3"><strong>A. Single note</strong><br>10,000 total</td><td>Existing sourced (Roboflow, papers)</td><td>6,000</td><td>External</td><td><span class="chip cb">Already exists</span></td></tr>
+<tr><td>New single-note in diverse environments</td><td>2,500</td><td>You collect</td><td><span class="chip cg">High</span></td></tr>
+<tr><td>New single-note degraded (worn, crumpled)</td><td>1,500</td><td>You collect</td><td><span class="chip cg">High</span></td></tr>
+<tr><td rowspan="3"><strong>B. Multi-note (raw)</strong><br>8,000 total</td><td>2 notes, simple background</td><td>3,500</td><td>You collect</td><td><span class="chip cr">Critical — novel</span></td></tr>
+<tr><td>3 notes, simple background</td><td>2,500</td><td>You collect</td><td><span class="chip cr">Critical — novel</span></td></tr>
+<tr><td>2–3 notes, real environments</td><td>2,000</td><td>You collect</td><td><span class="chip cr">Critical — novel</span></td></tr>
+<tr><td rowspan="4"><strong>C. Occlusion</strong><br>4,000 total</td><td>Notes overlapping each other</td><td>1,200</td><td>You collect</td><td><span class="chip cg">High</span></td></tr>
+<tr><td>Fingers covering parts of note</td><td>1,000</td><td>You collect</td><td><span class="chip cg">High</span></td></tr>
+<tr><td>Folded notes (half, thirds)</td><td>1,000</td><td>You collect</td><td><span class="chip cg">High</span></td></tr>
+<tr><td>Half-visible (note at frame edge)</td><td>800</td><td>You collect</td><td><span class="chip cy">Medium</span></td></tr>
+<tr><td rowspan="2"><strong>D. Environments & lighting</strong><br>4,000 total</td><td>7 environments × multiple denominations</td><td>2,500</td><td>You collect</td><td><span class="chip cg">High</span></td></tr>
+<tr><td>Special lighting (night, fluorescent, outdoor)</td><td>1,500</td><td>You collect</td><td><span class="chip cg">High</span></td></tr>
+<tr><td colspan="2"><strong>Total target</strong></td><td><strong>~26,000</strong></td><td></td><td></td></tr>
+</tbody>
+</table>
+
+<div class="info">The 10,000 single-note images include ~6,000 sourced from existing public datasets (remapped to your schema). You only need to physically collect ~4,000 single-note images. The 16,000 remaining are all multi-note, occlusion, and environment images — these are YOUR original contribution.</div>
+`,
+
+single:`
+<h3>Single-note capture checklist — per denomination (×7 denominations)</h3>
+<p>For EACH of the 7 denominations (10, 20, 50, 100, 200, 500, 1000 Taka), collect the following. This block repeats 7 times.</p>
+
+<div class="info">Naming convention: <code>S_{denomination}_{condition}_{environment}_{seq}.jpg</code><br>
+Example: <code>S_100_flat_desk_001.jpg</code> — single 100tk note, flat, on desk, sequence 001</div>
+
+<h3>Condition variants per denomination</h3>
+<table class="tbl">
+<thead><tr><th>Condition</th><th>Images per denom.</th><th>Total (×7)</th><th>How to shoot</th></tr></thead>
+<tbody>
+<tr><td>New/flat note, front face</td><td>30</td><td>210</td><td>Place flat on white paper, even light, various angles ±20°</td></tr>
+<tr><td>New/flat note, back face</td><td>20</td><td>140</td><td>Flip the note, same setup</td></tr>
+<tr><td>Lightly used note</td><td>20</td><td>140</td><td>Used note from wallet, natural wear</td></tr>
+<tr><td>Heavily worn note</td><td>15</td><td>105</td><td>Old limp note, some fading</td></tr>
+<tr><td>Folded in half (lengthwise)</td><td>15</td><td>105</td><td>Fold exactly in half, shoot at 3 angles</td></tr>
+<tr><td>Folded in thirds (wallet fold)</td><td>15</td><td>105</td><td>As you'd take from a wallet</td></tr>
+<tr><td>Crumpled and re-flattened</td><td>15</td><td>105</td><td>Crumple, flatten partially, shoot</td></tr>
+<tr><td>Rolled (as in a pocket)</td><td>10</td><td>70</td><td>Loosely rolled cylinder</td></tr>
+<tr><td>Slightly damp/limp</td><td>10</td><td>70</td><td>Humid day or slightly misted</td></tr>
+<tr><td><strong>Subtotal per denomination</strong></td><td><strong>150</strong></td><td><strong>1,050</strong></td><td></td></tr>
+</tbody>
+</table>
+<p>7 denominations × 150 = 1,050 images from you. Combined with ~6,000 sourced = total single-note base of ~7,050 before augmentation.</p>
+
+<div class="warn">Do NOT photograph only clean flat notes — that is what every existing dataset already has. The value is in worn, folded, crumpled variants. Prioritise those if time is short.</div>
+`,
+
+multi:`
+<h3>Multi-note scene capture — the core novelty</h3>
+<p>All images here have 2 or 3 notes. Each note in the image needs its own bounding box annotation with denomination label.</p>
+
+<div class="info">Naming: <code>M_{n_notes}_{sum}BDT_{seq}.jpg</code><br>
+Example: <code>M_2_150BDT_042.jpg</code> — 2 notes, sum = 150 BDT, sequence 042</div>
+
+<h3>Two-note combination matrix — most common real-world pairs</h3>
+<table class="tbl">
+<thead><tr><th>Note 1</th><th>Note 2</th><th>Sum</th><th>Real-world context</th><th>Target images</th></tr></thead>
+<tbody>
+<tr><td>100</td><td>50</td><td>150</td><td>Paying for groceries</td><td>80</td></tr>
+<tr><td>500</td><td>100</td><td>600</td><td>Paying for restaurant</td><td>80</td></tr>
+<tr><td>500</td><td>500</td><td>1000</td><td>Paying rent/large purchase</td><td>60</td></tr>
+<tr><td>1000</td><td>500</td><td>1500</td><td>Large cash transaction</td><td>60</td></tr>
+<tr><td>100</td><td>20</td><td>120</td><td>Small purchase change</td><td>70</td></tr>
+<tr><td>200</td><td>100</td><td>300</td><td>Medium purchase</td><td>70</td></tr>
+<tr><td>50</td><td>20</td><td>70</td><td>Rickshaw/small vendor</td><td>70</td></tr>
+<tr><td>100</td><td>100</td><td>200</td><td>Two equal notes</td><td>60</td></tr>
+<tr><td>500</td><td>200</td><td>700</td><td>Shopping</td><td>60</td></tr>
+<tr><td>1000</td><td>1000</td><td>2000</td><td>Large denomination pair</td><td>50</td></tr>
+<tr><td>10</td><td>20</td><td>30</td><td>Smallest denominations</td><td>60</td></tr>
+<tr><td>50</td><td>50</td><td>100</td><td>Two equal small notes</td><td>60</td></tr>
+<tr><td>Random diverse pairs</td><td>—</td><td>varied</td><td>Unseen combinations (anti-bias)</td><td>420</td></tr>
+<tr><td colspan="4"><strong>Two-note subtotal</strong></td><td><strong>1,200</strong></td></tr>
+</tbody>
+</table>
+
+<h3>Three-note combinations — most common real-world triples</h3>
+<table class="tbl">
+<thead><tr><th>Notes in scene</th><th>Sum</th><th>Context</th><th>Target images</th></tr></thead>
+<tbody>
+<tr><td>500 + 200 + 100</td><td>800</td><td>Shopping change received</td><td>60</td></tr>
+<tr><td>1000 + 500 + 100</td><td>1600</td><td>Large transaction</td><td>60</td></tr>
+<tr><td>100 + 50 + 20</td><td>170</td><td>Your example — daily use</td><td>70</td></tr>
+<tr><td>500 + 100 + 50</td><td>650</td><td>Mixed change</td><td>60</td></tr>
+<tr><td>200 + 100 + 100</td><td>400</td><td>Three notes, two same</td><td>50</td></tr>
+<tr><td>1000 + 200 + 50</td><td>1250</td><td>High value transaction</td><td>50</td></tr>
+<tr><td>100 + 20 + 10</td><td>130</td><td>Low denomination triple</td><td>60</td></tr>
+<tr><td>Random diverse triples</td><td>varied</td><td>Anti-bias variety</td><td>330</td></tr>
+<tr><td colspan="3"><strong>Three-note subtotal</strong></td><td><strong>740</strong></td></tr>
+</tbody>
+</table>
+
+<div class="ok"><strong>The "random diverse" rows are intentional and important.</strong> You cover the most common combinations (high ecological validity) AND include random pairs/triples the model has never seen (tests generalisation). This directly addresses your concern: "in real life all combinations are impossible to cover." Report this split in the paper: X% known combinations, Y% novel combinations.</div>
+
+<h3>Physical arrangements per multi-note scene</h3>
+<p>For each combination above, shoot in these 5 arrangements (multiply target images by 5 if you have time, or sample 2–3 per combination):</p>
+<ol>
+<li>Side by side, flat on table, no overlap</li>
+<li>Slightly overlapping (10–30% overlap)</li>
+<li>Fanned like a hand of cards</li>
+<li>Stacked loosely (one above other)</li>
+<li>Held in hand, realistic grip</li>
+</ol>
+`,
+
+sum:`
+<h3>The sum-folder system — your ground truth evaluation innovation</h3>
+<div class="ok">Your idea about "150tk folder" is genuinely smart. Here is the formalised version that makes it publishable and usable for evaluation.</div>
+
+<h3>What the sum-folder system is</h3>
+<p>Every multi-note image is placed in a folder named by its total monetary value. The folder name IS the ground truth. This allows any system (yours or future researchers') to evaluate transaction-value accuracy, not just detection accuracy. This is a contribution that no existing dataset has.</p>
+
+<h3>Folder naming convention</h3>
+<div class="folder">
+dataset/<br>
+└── multi_note/<br>
+&nbsp;&nbsp;&nbsp;&nbsp;├── sum_030/<br>
+&nbsp;&nbsp;&nbsp;&nbsp;│&nbsp;&nbsp;&nbsp;└── M_2_030BDT_001.jpg  ← 10+20<br>
+&nbsp;&nbsp;&nbsp;&nbsp;├── sum_070/<br>
+&nbsp;&nbsp;&nbsp;&nbsp;│&nbsp;&nbsp;&nbsp;└── M_2_070BDT_001.jpg  ← 50+20<br>
+&nbsp;&nbsp;&nbsp;&nbsp;├── sum_120/<br>
+&nbsp;&nbsp;&nbsp;&nbsp;├── sum_130/<br>
+&nbsp;&nbsp;&nbsp;&nbsp;├── sum_150/<br>
+&nbsp;&nbsp;&nbsp;&nbsp;│&nbsp;&nbsp;&nbsp;├── M_2_150BDT_001.jpg  ← 100+50<br>
+&nbsp;&nbsp;&nbsp;&nbsp;│&nbsp;&nbsp;&nbsp;└── M_2_150BDT_002.jpg  ← 100+50 (different arrangement)<br>
+&nbsp;&nbsp;&nbsp;&nbsp;├── sum_170/<br>
+&nbsp;&nbsp;&nbsp;&nbsp;│&nbsp;&nbsp;&nbsp;└── M_3_170BDT_001.jpg  ← 100+50+20<br>
+&nbsp;&nbsp;&nbsp;&nbsp;├── sum_200/ ... (continues for all target sums)
+</div>
+
+<h3>Sum-folder target list — all folders to create</h3>
+<table class="tbl">
+<thead><tr><th>Sum (BDT)</th><th>Note combinations that reach it</th><th>Priority</th></tr></thead>
+<tbody>
+<tr><td>30</td><td>10+20</td><td><span class="chip cy">Medium</span></td></tr>
+<tr><td>60</td><td>10+50, 20+20+20 (if using 3)</td><td><span class="chip cy">Medium</span></td></tr>
+<tr><td>70</td><td>50+20, 50+10+10</td><td><span class="chip cg">High</span></td></tr>
+<tr><td>120</td><td>100+20, 100+10+10</td><td><span class="chip cg">High</span></td></tr>
+<tr><td>130</td><td>100+20+10</td><td><span class="chip cg">High</span></td></tr>
+<tr><td>150</td><td>100+50, 100+50+... </td><td><span class="chip cr">Must have</span></td></tr>
+<tr><td>170</td><td>100+50+20 (your example)</td><td><span class="chip cr">Must have</span></td></tr>
+<tr><td>200</td><td>100+100, 200 (single)</td><td><span class="chip cr">Must have</span></td></tr>
+<tr><td>300</td><td>200+100, 100+100+100</td><td><span class="chip cr">Must have</span></td></tr>
+<tr><td>600</td><td>500+100, 200+200+200</td><td><span class="chip cr">Must have</span></td></tr>
+<tr><td>650</td><td>500+100+50</td><td><span class="chip cg">High</span></td></tr>
+<tr><td>700</td><td>500+200, 500+100+100</td><td><span class="chip cr">Must have</span></td></tr>
+<tr><td>800</td><td>500+200+100</td><td><span class="chip cg">High</span></td></tr>
+<tr><td>1000</td><td>500+500, 1000 (single)</td><td><span class="chip cr">Must have</span></td></tr>
+<tr><td>1500</td><td>1000+500</td><td><span class="chip cr">Must have</span></td></tr>
+<tr><td>1600</td><td>1000+500+100</td><td><span class="chip cg">High</span></td></tr>
+<tr><td>2000</td><td>1000+1000</td><td><span class="chip cg">High</span></td></tr>
+</tbody>
+</table>
+
+<h3>How this enables a new evaluation metric in your IEEE paper</h3>
+<p>You can report "Transaction Value Accuracy (TVA)" — the percentage of images where the model's detected denominations sum to the correct ground truth value. This is a metric that no prior BDT paper has reported, because no prior dataset has ground truth sums. It directly measures what matters for your blind user: did the system correctly tell them the total they are paying or receiving?</p>
+`,
+
+occlusion:`
+<h3>Occlusion & conditions capture checklist</h3>
+
+<h3>Occlusion type 1 — note-on-note overlap</h3>
+<table class="tbl">
+<thead><tr><th>Overlap %</th><th>Which note on top</th><th>Images</th></tr></thead>
+<tbody>
+<tr><td>~10% overlap (barely touching)</td><td>Higher denomination on top</td><td>200</td></tr>
+<tr><td>~30% overlap (partial)</td><td>Higher denomination on top</td><td>250</td></tr>
+<tr><td>~50% overlap (half hidden)</td><td>Mixed: shoot both orderings</td><td>300</td></tr>
+<tr><td>~70% overlap (mostly hidden)</td><td>Mixed</td><td>200</td></tr>
+<tr><td colspan="2"><strong>Subtotal</strong></td><td><strong>950</strong></td></tr>
+</tbody>
+</table>
+
+<h3>Occlusion type 2 — fingers covering note</h3>
+<table class="tbl">
+<thead><tr><th>Grip style</th><th>Coverage area</th><th>Images</th></tr></thead>
+<tbody>
+<tr><td>Pinch grip (two fingers, corner)</td><td>~10% covered</td><td>150</td></tr>
+<tr><td>Full hand grip (holding to camera)</td><td>~30% covered</td><td>200</td></tr>
+<tr><td>Counting grip (thumb flicking through stack)</td><td>~40% covered</td><td>150</td></tr>
+<tr><td>Blind person's reading grip (fingertips tracing)</td><td>~20% covered</td><td>150</td></tr>
+<tr><td colspan="2"><strong>Subtotal</strong></td><td><strong>650</strong></td></tr>
+</tbody>
+</table>
+
+<h3>Lighting conditions (apply to multi-note scenes)</h3>
+<table class="tbl">
+<thead><tr><th>Condition</th><th>How to achieve</th><th>Images</th></tr></thead>
+<tbody>
+<tr><td>Bright natural daylight (outdoor)</td><td>Near window, midday</td><td>400</td></tr>
+<tr><td>Indoor fluorescent (office/shop)</td><td>Standard tube lighting</td><td>400</td></tr>
+<tr><td>Dim room (night)</td><td>Single 25W bulb or lamp at distance</td><td>400</td></tr>
+<tr><td>Harsh shadow (single side light)</td><td>Desk lamp to one side</td><td>300</td></tr>
+<tr><td>Glare (reflective surface + light)</td><td>Note on glass table, overhead light</td><td>300</td></tr>
+<tr><td colspan="2"><strong>Subtotal</strong></td><td><strong>1,800</strong></td></tr>
+</tbody>
+</table>
+
+<h3>7 environment checklist</h3>
+<div class="cl-item"><div class="cl-box"></div><div class="cl-text"><strong>Desk/table:</strong> Flat clean surface. Professional. 500 images.</div></div>
+<div class="cl-item"><div class="cl-box"></div><div class="cl-text"><strong>Floor/ground:</strong> Note dropped, realistic accident scenario. 300 images.</div></div>
+<div class="cl-item"><div class="cl-box"></div><div class="cl-text"><strong>Wallet/purse interior:</strong> Notes partially inside wallet, realistic retrieval. 300 images.</div></div>
+<div class="cl-item"><div class="cl-box"></div><div class="cl-text"><strong>Pocket (fabric background):</strong> Notes on clothing fabric. 300 images.</div></div>
+<div class="cl-item"><div class="cl-box"></div><div class="cl-text"><strong>Hand (held up):</strong> User holds notes toward camera. 400 images.</div></div>
+<div class="cl-item"><div class="cl-box"></div><div class="cl-text"><strong>ATM tray / flat surface with frame:</strong> Notes in a tray or box. 200 images.</div></div>
+<div class="cl-item"><div class="cl-box"></div><div class="cl-text"><strong>Market/shop counter:</strong> Notes on a busy surface. 200 images.</div></div>
+`,
+
+annotation:`
+<h3>Annotation schema — the exact standard to follow</h3>
+
+<h3>Format: YOLO v8/v11 (normalised bounding box)</h3>
+<p>Each image <code>IMG_00123.jpg</code> has a matching <code>IMG_00123.txt</code> file in the labels folder.</p>
+<p>Each line in the .txt file = one note in the image:</p>
+<div class="folder">
+class_id  x_center  y_center  width  height<br><br>
+Example — image with 100tk + 50tk + 20tk notes:<br>
+3  0.512  0.423  0.641  0.312   ← 100tk (class 3)<br>
+2  0.201  0.618  0.580  0.295   ← 50tk  (class 2)<br>
+1  0.789  0.502  0.551  0.278   ← 20tk  (class 1)
+</div>
+
+<h3>Class ID assignment — do not change this after deciding</h3>
+<table class="tbl">
+<thead><tr><th>Class ID</th><th>Denomination</th><th>Bangla</th></tr></thead>
+<tbody>
+<tr><td>0</td><td>10 Taka</td><td>১০ টাকা</td></tr>
+<tr><td>1</td><td>20 Taka</td><td>২০ টাকা</td></tr>
+<tr><td>2</td><td>50 Taka</td><td>৫০ টাকা</td></tr>
+<tr><td>3</td><td>100 Taka</td><td>১০০ টাকা</td></tr>
+<tr><td>4</td><td>200 Taka</td><td>২০০ টাকা</td></tr>
+<tr><td>5</td><td>500 Taka</td><td>৫০০ টাকা</td></tr>
+<tr><td>6</td><td>1000 Taka</td><td>১০০০ টাকা</td></tr>
+</tbody>
+</table>
+
+<h3>Ground truth metadata file — per image</h3>
+<p>Each image also gets a row in a master <code>metadata.csv</code> file:</p>
+<div class="folder">
+image_id, notes_in_scene, denominations, sum_bdt, condition, environment, lighting, annotator<br>
+IMG_00123, 3, "100,50,20", 170, crumpled, desk, indoor_fluorescent, junior_A
+</div>
+
+<h3>Quality rules for annotators (give to juniors)</h3>
+<ol>
+<li>Draw box as tight as possible — include all visible edges of the note, no excess margin</li>
+<li>For partially visible notes: annotate if at least 40% of the note is visible. Skip if less.</li>
+<li>For folded notes: annotate the visible folded area as one box</li>
+<li>For overlapping notes: each note gets its own box — they WILL overlap in the annotation file, that is correct</li>
+<li>Every box must be labelled — never leave an unlabelled box</li>
+<li>After annotating, double-check: count boxes in label file = count notes in image</li>
+<li>If unsure of denomination: open metadata.csv, confirm with the shooting log</li>
+</ol>
+
+<div class="warn"><strong>Annotation quality check:</strong> After every 200 images, a second annotator reviews 10 random images. If more than 1 error found in 10 → re-annotate that batch. Record inter-annotator agreement rate (target: >95%). This number goes in your Data in Brief paper as evidence of quality.</div>
+`,
+
+folder:`
+<h3>Complete folder and file structure</h3>
+<div class="folder">
+BDT-MultiScene-Dataset/<br>
+├── README.md<br>
+├── LICENSE.txt  (CC BY 4.0)<br>
+├── metadata.csv  (master annotation log)<br>
+├── data.yaml  (YOLO config file)<br>
+│<br>
+├── images/<br>
+│&nbsp;&nbsp;&nbsp;├── train/  (70%)<br>
+│&nbsp;&nbsp;&nbsp;│&nbsp;&nbsp;&nbsp;├── single_note/<br>
+│&nbsp;&nbsp;&nbsp;│&nbsp;&nbsp;&nbsp;├── multi_note/<br>
+│&nbsp;&nbsp;&nbsp;│&nbsp;&nbsp;&nbsp;├── occlusion/<br>
+│&nbsp;&nbsp;&nbsp;│&nbsp;&nbsp;&nbsp;└── environment/<br>
+│&nbsp;&nbsp;&nbsp;├── val/  (15%)<br>
+│&nbsp;&nbsp;&nbsp;│&nbsp;&nbsp;&nbsp;└── [same subfolders]<br>
+│&nbsp;&nbsp;&nbsp;└── test/  (15% — held out)<br>
+│&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;└── [same subfolders]<br>
+│<br>
+├── labels/  (mirrors images/ structure)<br>
+│&nbsp;&nbsp;&nbsp;├── train/<br>
+│&nbsp;&nbsp;&nbsp;├── val/<br>
+│&nbsp;&nbsp;&nbsp;└── test/<br>
+│<br>
+├── ground_truth/  (for TVA evaluation)<br>
+│&nbsp;&nbsp;&nbsp;└── multi_note/  (sum folders)<br>
+│&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;├── sum_030/<br>
+│&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;├── sum_070/<br>
+│&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;├── sum_150/<br>
+│&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;└── ... (all target sums)<br>
+│<br>
+├── sample_images/  (20 curated examples for paper figures)<br>
+└── statistics/<br>
+&nbsp;&nbsp;&nbsp;&nbsp;├── class_distribution.png<br>
+&nbsp;&nbsp;&nbsp;&nbsp;├── condition_distribution.png<br>
+&nbsp;&nbsp;&nbsp;&nbsp;└── environment_distribution.png
+</div>
+
+<h3>data.yaml content</h3>
+<div class="folder">
+path: ./BDT-MultiScene-Dataset<br>
+train: images/train<br>
+val: images/val<br>
+test: images/test<br><br>
+nc: 7<br>
+names: ['10tk','20tk','50tk','100tk','200tk','500tk','1000tk']<br><br>
+# Dataset info (include this for documentation)<br>
+version: 1.0<br>
+created: 2026-04<br>
+doi: [fill after Mendeley upload]
+</div>
+`,
+
+paper:`
+<h3>Data in Brief paper structure — exactly what to write</h3>
+<div class="info">Data in Brief uses a mandatory template. The article title MUST contain "data" or "dataset". Target: 3,000–5,000 words. Submit to Mendeley Data first, get DOI, then submit paper.</div>
+
+<h3>Required sections (from the template)</h3>
+<table class="tbl">
+<thead><tr><th>Section</th><th>What to write</th><th>~Length</th></tr></thead>
+<tbody>
+<tr><td><strong>Title</strong></td><td>"BDT-MultiScene: A multi-denomination scene dataset of Bangladeshi Taka banknotes for assistive currency recognition"</td><td>1 line</td></tr>
+<tr><td><strong>Abstract</strong></td><td>Collection process → data characteristics → gap filled → reuse potential. No conclusions. Max 500 words.</td><td>250–400 words</td></tr>
+<tr><td><strong>Keywords</strong></td><td>4–8 keywords: Bangladeshi Taka, banknote detection, multi-scene dataset, object detection, YOLO annotation, assistive technology, visually impaired</td><td>7 terms</td></tr>
+<tr><td><strong>Specifications Table</strong></td><td>Mandatory form: Subject area, Data type, Format, Collection method, Source location, Data accessibility (Mendeley DOI), Related research article (your IEEE paper DOI once published)</td><td>1 table</td></tr>
+<tr><td><strong>Value of the Data</strong></td><td>Bullet list: (1) first multi-note BDT dataset, (2) ground truth sum annotation, (3) 7 environments × 5 conditions, (4) reusable for future BDT detection research</td><td>200 words</td></tr>
+<tr><td><strong>Data Description</strong></td><td>Describe each file/folder individually. Class distribution table. Sample images figure. Statistics figures. NO interpretation.</td><td>800 words</td></tr>
+<tr><td><strong>Experimental Design, Materials and Methods</strong></td><td>Camera specs → capture protocol → annotation tool → class schema → quality control (inter-annotator agreement) → split rationale</td><td>1,200 words</td></tr>
+</tbody>
+</table>
+
+<h3>Specifications table (fill this in)</h3>
+<table class="tbl">
+<thead><tr><th>Field</th><th>Value</th></tr></thead>
+<tbody>
+<tr><td>Subject area</td><td>Computer Vision; Assistive Technology; Financial Technology</td></tr>
+<tr><td>More specific subject area</td><td>Banknote recognition; Object detection; Visually impaired assistive systems</td></tr>
+<tr><td>Type of data</td><td>Images (.jpg); Annotation files (.txt YOLO format); Metadata (.csv); Configuration file (.yaml)</td></tr>
+<tr><td>Data collection</td><td>Smartphone camera (specify model); Roboflow annotation tool; [X] annotators; [date range]</td></tr>
+<tr><td>Data source location</td><td>Khulna, Bangladesh [and any other locations used]</td></tr>
+<tr><td>Data accessibility</td><td>Repository: Mendeley Data. DOI: [fill after upload]</td></tr>
+<tr><td>Related research article</td><td>[Your IEEE paper citation — fill after acceptance]</td></tr>
+</tbody>
+</table>
+
+<h3>Repository: where to deposit (mandatory before submission)</h3>
+<ol>
+<li><strong>Mendeley Data</strong> (recommended — same publisher as Elsevier/Data in Brief, seamless linking). Free. No size limit. CC BY 4.0 license.</li>
+<li><strong>Zenodo</strong> (alternative — CERN-hosted, free, max 50GB per record).</li>
+<li><strong>Roboflow Universe</strong> (additional mirror — increases discoverability but is not a citable DOI repository alone).</li>
+</ol>
+<div class="warn">You need the Mendeley Data DOI before you can submit the paper. Upload the dataset first, get the DOI, then write the paper. Do not submit the paper with a placeholder DOI — reviewers will check.</div>
+`
+};
+
+function show(id) {
+  document.querySelectorAll('.nb').forEach(b=>b.classList.remove('on'));
+  event.target.classList.add('on');
+  document.getElementById('content').innerHTML = pages[id];
+}
+show('novelty');
+</script>

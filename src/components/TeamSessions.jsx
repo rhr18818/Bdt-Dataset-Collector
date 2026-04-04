@@ -1,0 +1,222 @@
+import { useState } from 'react';
+import { Users, Plus, Trash2, Clock } from 'lucide-react';
+import { Modal, Badge, EmptyState, Btn, ConfirmModal } from './ui/index.jsx';
+import { AVATAR_COLORS } from '../data/seedData.js';
+
+const ROLES = ['lead', 'collector', 'annotator', 'both'];
+const ROLE_LABELS = { lead: 'Team Lead', collector: 'Collector', annotator: 'Annotator', both: 'Collector & Annotator' };
+
+function AddMemberModal({ onSubmit, onClose }) {
+  const [name, setName] = useState('');
+  const [role, setRole] = useState('collector');
+  const [color, setColor] = useState(AVATAR_COLORS[0]);
+  const [accessId, setAccessId] = useState('');
+
+  const initials = name.trim().split(' ').map(w => w[0]).join('').toUpperCase().slice(0, 2) || '??';
+
+  function handleSubmit() {
+    if (!name.trim() || !accessId.trim()) return;
+    onSubmit({ name: name.trim(), initials, role, color, accessId: accessId.trim() });
+  }
+
+  return (
+    <Modal title="Add Team Member" onClose={onClose} size="sm" footer={<span>Escape to cancel</span>}>
+      <div className="mb-4">
+        <p className="text-xs font-semibold mb-1 uppercase" style={{ color: 'var(--text-muted)' }}>Full Name</p>
+        <input type="text" value={name} onChange={e => setName(e.target.value)} autoFocus
+          className="w-full border rounded-xl px-4 py-2 text-sm focus:outline-none"
+          style={{ borderColor: 'var(--border)' }} placeholder="e.g. Junior C" />
+      </div>
+      <div className="mb-4">
+        <p className="text-xs font-semibold mb-1 uppercase" style={{ color: 'var(--text-muted)' }}>Access ID</p>
+        <input type="text" value={accessId} onChange={e => setAccessId(e.target.value)}
+          className="w-full border rounded-xl px-4 py-2 text-sm focus:outline-none"
+          style={{ borderColor: 'var(--border)' }} placeholder="e.g. junior_c" />
+        <p className="text-xs mt-1" style={{ color: 'var(--text-muted)' }}>Used by this member to log in.</p>
+      </div>
+      <div className="mb-4">
+        <p className="text-xs font-semibold mb-1 uppercase" style={{ color: 'var(--text-muted)' }}>Role</p>
+        <div className="flex flex-wrap gap-2">
+          {ROLES.map(r => (
+            <button key={r} type="button" onClick={() => setRole(r)}
+              className="px-3 py-1.5 rounded-lg text-xs font-medium border transition-all"
+              style={{ background: role === r ? 'var(--accent)' : '#fff', color: role === r ? '#fff' : 'var(--text-muted)', borderColor: role === r ? 'var(--accent)' : 'var(--border)' }}>
+              {ROLE_LABELS[r]}
+            </button>
+          ))}
+        </div>
+      </div>
+      <div className="mb-4">
+        <p className="text-xs font-semibold mb-2 uppercase" style={{ color: 'var(--text-muted)' }}>Avatar Color</p>
+        <div className="flex gap-2 flex-wrap">
+          {AVATAR_COLORS.map(c => (
+            <button key={c} type="button" onClick={() => setColor(c)}
+              className="w-8 h-8 rounded-full transition-all hover:scale-110"
+              style={{ background: c, outline: color === c ? `3px solid ${c}` : 'none', outlineOffset: 2 }} />
+          ))}
+        </div>
+      </div>
+      <div className="mb-5 flex items-center gap-3 p-3 rounded-xl" style={{ background: '#f8f9ff' }}>
+        <div className="w-10 h-10 rounded-full flex items-center justify-center font-bold text-white flex-shrink-0"
+          style={{ background: color }}>{initials}</div>
+        <div>
+          <p className="font-semibold text-sm" style={{ color: 'var(--text-primary)' }}>{name || 'Your Name'}</p>
+          <p className="text-xs" style={{ color: 'var(--text-muted)' }}>{ROLE_LABELS[role]}</p>
+        </div>
+      </div>
+      <div className="flex justify-end gap-3">
+        <Btn variant="ghost" onClick={onClose}>Cancel</Btn>
+        <Btn variant="primary" onClick={handleSubmit} disabled={!name.trim() || !accessId.trim()}>Add Member</Btn>
+      </div>
+    </Modal>
+  );
+}
+
+export default function TeamSessions({ state, computed, dispatch }) {
+  const [showAdd, setShowAdd] = useState(false);
+  const [confirmDelete, setConfirmDelete] = useState(null);
+  const [logFilter, setLogFilter] = useState('all');
+  const { team, sessions } = state;
+  const { memberStats } = computed;
+
+  const memberById = {};
+  for (const m of team) memberById[m.id] = m;
+
+  function handleAdd(payload) {
+    dispatch({ type: 'ADD_TEAM_MEMBER', payload });
+    setShowAdd(false);
+  }
+
+  function handleDelete(id) {
+    dispatch({ type: 'REMOVE_TEAM_MEMBER', payload: { id } });
+    setConfirmDelete(null);
+  }
+
+  const filteredLog = (logFilter === 'all' ? sessions : sessions.filter(s => s.memberId === logFilter))
+    .slice().reverse().slice(0, 100);
+
+  function exportSessionCSV() {
+    const headers = ['ID','Timestamp','Member','Category','Subcategory','Denominations','Sum','Conditions','Environments','Lighting','Arrangements','ImageCount','Status','Notes'];
+    const rows = sessions.map(s => [
+      s.id, s.timestamp, memberById[s.memberId]?.name || s.memberId,
+      s.category, s.subcategory, s.denominations.join('+'), s.groundTruthSum,
+      s.conditions.join(';'), s.environments.join(';'), s.lighting.join(';'),
+      s.arrangements.join(';'), s.imageCount, s.status, s.notes
+    ]);
+    const csv = [headers, ...rows].map(r => r.map(v => `"${String(v || '').replace(/"/g, '""')}"`).join(',')).join('\n');
+    const blob = new Blob([csv], { type: 'text/csv' });
+    const a = document.createElement('a'); a.href = URL.createObjectURL(blob);
+    a.download = `bdt_sessions_${new Date().toISOString().slice(0,10)}.csv`; a.click();
+  }
+
+  return (
+    <div className="p-4 md:p-6 flex flex-col gap-5">
+      {/* Team Cards */}
+      <div className="flex items-center justify-between mb-1">
+        <p className="font-bold text-lg" style={{ color: 'var(--text-primary)' }}>Team Members</p>
+        <Btn variant="primary" onClick={() => setShowAdd(true)}><Plus size={14} /> Add Member</Btn>
+      </div>
+
+      {team.length === 0 ? (
+        <EmptyState icon={Users} title="No team members yet" description="Add your team to start assigning and tracking sessions."
+          action={<Btn variant="primary" onClick={() => setShowAdd(true)}><Plus size={14} /> Add First Member</Btn>} />
+      ) : (
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+          {team.map(m => {
+            const stats = memberStats[m.id] || {};
+            return (
+              <div key={m.id} className="rounded-xl p-5 shadow-sm flex flex-col gap-3 relative" style={{ background: '#fff', border: '1px solid var(--border)' }}>
+                <button onClick={() => setConfirmDelete(m)} className="absolute top-3 right-3 rounded-lg p-1.5 hover:bg-red-50 transition-colors">
+                  <Trash2 size={14} style={{ color: '#d1d5db' }} className="hover:text-red-500" />
+                </button>
+                <div className="flex items-center gap-3">
+                  <div className="w-11 h-11 rounded-full flex items-center justify-center font-bold text-white text-base flex-shrink-0" style={{ background: m.color }}>{m.initials}</div>
+                  <div>
+                    <p className="font-bold text-sm" style={{ color: 'var(--text-primary)' }}>{m.name}</p>
+                    <Badge variant="default">{ROLE_LABELS[m.role] || m.role}</Badge>
+                  </div>
+                </div>
+                <div className="grid grid-cols-2 gap-2 text-xs">
+                  <div className="rounded-lg p-2 text-center" style={{ background: '#f8f9ff' }}>
+                    <p className="font-bold font-mono text-lg" style={{ color: 'var(--accent)' }}>{(stats.collected || 0).toLocaleString()}</p>
+                    <p style={{ color: 'var(--text-muted)' }}>Collected</p>
+                  </div>
+                  <div className="rounded-lg p-2 text-center" style={{ background: '#f0fdf4' }}>
+                    <p className="font-bold font-mono text-lg" style={{ color: 'var(--success)' }}>{(stats.annotated || 0).toLocaleString()}</p>
+                    <p style={{ color: 'var(--text-muted)' }}>Annotated</p>
+                  </div>
+                  <div className="rounded-lg p-2 text-center col-span-2" style={{ background: '#fafafa' }}>
+                    <div className="flex items-center justify-center gap-1">
+                      <Clock size={11} style={{ color: 'var(--text-muted)' }} />
+                      <p style={{ color: 'var(--text-muted)' }}>
+                        {stats.lastActive ? new Date(stats.lastActive).toLocaleDateString() : 'Never active'}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      )}
+
+      {/* Session Log */}
+      <div className="rounded-xl overflow-hidden shadow-sm" style={{ border: '1px solid var(--border)', background: '#fff' }}>
+        <div className="px-5 py-4 border-b flex items-center gap-3" style={{ borderColor: 'var(--border)' }}>
+          <p className="font-semibold text-sm flex-1" style={{ color: 'var(--text-primary)' }}>Session Log</p>
+          <select value={logFilter} onChange={e => setLogFilter(e.target.value)}
+            className="border rounded-lg px-3 py-1.5 text-xs focus:outline-none" style={{ borderColor: 'var(--border)' }}>
+            <option value="all">All Members</option>
+            {team.map(m => <option key={m.id} value={m.id}>{m.name}</option>)}
+          </select>
+          <Btn variant="ghost" size="sm" onClick={exportSessionCSV}>↓ Export CSV</Btn>
+        </div>
+        <div className="overflow-x-auto max-h-96">
+          <table className="w-full text-xs" style={{ borderCollapse: 'collapse' }}>
+            <thead style={{ background: '#f8f9ff', position: 'sticky', top: 0 }}>
+              <tr>
+                {['Timestamp','Member','Category','Subcategory','Images','Status','Notes'].map(h => (
+                  <th key={h} className="px-4 py-3 text-left font-semibold whitespace-nowrap" style={{ color: 'var(--text-muted)', borderBottom: '1px solid var(--border)' }}>{h}</th>
+                ))}
+              </tr>
+            </thead>
+            <tbody>
+              {filteredLog.length === 0 ? (
+                <tr><td colSpan={7} className="py-8 text-center text-sm" style={{ color: 'var(--text-muted)' }}>No sessions logged yet.</td></tr>
+              ) : filteredLog.map(s => {
+                const member = memberById[s.memberId];
+                return (
+                  <tr key={s.id} className="border-b hover:bg-gray-50" style={{ borderColor: 'var(--border)' }}>
+                    <td className="px-4 py-2 font-mono whitespace-nowrap" style={{ color: 'var(--text-muted)' }}>{new Date(s.timestamp).toLocaleString()}</td>
+                    <td className="px-4 py-2">
+                      <div className="flex items-center gap-1.5">
+                        <div className="w-4 h-4 rounded-full flex-shrink-0" style={{ background: member?.color || '#6b7280' }} />
+                        <span>{member?.name || 'Unknown'}</span>
+                      </div>
+                    </td>
+                    <td className="px-4 py-2">
+                      <span className="px-1.5 py-0.5 rounded text-white font-bold text-xs" style={{ background: { A:'#2563eb', B:'#d97706', C:'#7c3aed', D:'#0891b2' }[s.category] }}>{s.category}</span>
+                    </td>
+                    <td className="px-4 py-2 font-mono" style={{ maxWidth: 140, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{s.subcategory}</td>
+                    <td className="px-4 py-2 font-mono font-bold">{s.imageCount}</td>
+                    <td className="px-4 py-2"><Badge variant={{ collected:'default', annotated:'warning', reviewed:'blue', approved:'success' }[s.status]}>{s.status}</Badge></td>
+                    <td className="px-4 py-2 max-w-xs truncate" style={{ color: 'var(--text-muted)' }}>{s.notes || '—'}</td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      {showAdd && <AddMemberModal onSubmit={handleAdd} onClose={() => setShowAdd(false)} />}
+      {confirmDelete && (
+        <ConfirmModal title="Remove Team Member" danger
+          message={`Remove "${confirmDelete.name}" from the team? Their session logs will be preserved.`}
+          onConfirm={() => handleDelete(confirmDelete.id)}
+          onCancel={() => setConfirmDelete(null)}
+          confirmLabel="Remove Member" />
+      )}
+    </div>
+  );
+}

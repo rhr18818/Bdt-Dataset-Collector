@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>BDT-Collect — Dataset Collection Manager</title>
+    <meta name="description" content="Dataset collection management and tracking system for the BDT-MultiScene banknote dataset research project." />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet" />
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+      :root {
+        --bg-primary: #0f1117;
+        --bg-surface: #f8f7f4;
+        --bg-card: #ffffff;
+        --accent: #2563eb;
+        --accent-warm: #d97706;
+        --success: #16a34a;
+        --danger: #dc2626;
+        --text-primary: #111827;
+        --text-muted: #6b7280;
+        --border: #e5e7eb;
+        --sidebar-text: #94a3b8;
+        --sidebar-active: #ffffff;
+      }
+      * { box-sizing: border-box; }
+      body { margin: 0; font-family: 'Inter', sans-serif; background: var(--bg-surface); color: var(--text-primary); }
+      .font-mono, .tabular { font-family: 'JetBrains Mono', monospace; font-variant-numeric: tabular-nums; }
+      .progress-bar { transition: width 0.4s cubic-bezier(0.4,0,0.2,1); }
+      .sidebar-transition { transition: transform 0.3s ease, width 0.3s ease; }
+      .modal-backdrop { animation: fadeIn 0.15s ease; }
+      .modal-content { animation: slideUp 0.2s ease; }
+      .toast-item { animation: slideInRight 0.3s ease; }
+      @keyframes fadeIn { from { opacity:0 } to { opacity:1 } }
+      @keyframes slideUp { from { opacity:0; transform:translateY(16px) } to { opacity:1; transform:translateY(0) } }
+      @keyframes slideInRight { from { opacity:0; transform:translateX(100%) } to { opacity:1; transform:translateX(0) } }
+      ::-webkit-scrollbar { width: 6px; height: 6px; }
+      ::-webkit-scrollbar-track { background: transparent; }
+      ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 3px; }
+    </style>
+    <script type="module" crossorigin src="/assets/index-DPzRqq88.js"></script>
+  </head>
+  <body>
+    <div id="root"></div>
+  </body>
+</html>
