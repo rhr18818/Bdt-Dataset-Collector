@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Users, Plus, Trash2, Clock } from 'lucide-react';
+import { Users, Plus, Trash2, Clock, Edit2 } from 'lucide-react';
 import { Modal, Badge, EmptyState, Btn, ConfirmModal } from './ui/index.jsx';
 import { AVATAR_COLORS } from '../data/seedData.js';
 
@@ -72,9 +72,63 @@ function AddMemberModal({ onSubmit, onClose }) {
   );
 }
 
+function EditSessionModal({ session, onSubmit, onClose }) {
+  const [category, setCategory] = useState(session.category || 'A');
+  const [subcategory, setSubcategory] = useState(session.subcategory || '');
+  const [imageCount, setImageCount] = useState(session.imageCount || 0);
+  const [notes, setNotes] = useState(session.notes || '');
+
+  function handleSubmit() {
+    onSubmit(session.id, {
+      category,
+      subcategory,
+      imageCount: parseInt(imageCount, 10) || 0,
+      notes
+    });
+  }
+
+  return (
+    <Modal title="Edit Session Log" onClose={onClose} size="sm">
+      <div className="space-y-4">
+        <div>
+          <p className="text-xs font-semibold mb-1" style={{ color: 'var(--text-muted)' }}>Category</p>
+          <select value={category} onChange={e => setCategory(e.target.value)}
+            className="w-full border rounded-xl px-3 py-2 text-sm focus:outline-none" style={{ borderColor: 'var(--border)' }}>
+            <option value="A">A - Single Denomination</option>
+            <option value="B">B - Multiple Denominations</option>
+            <option value="C">C - Difficult Conditions</option>
+            <option value="D">D - Difficult Environments</option>
+          </select>
+        </div>
+        <div>
+          <p className="text-xs font-semibold mb-1" style={{ color: 'var(--text-muted)' }}>Subcategory / Notes</p>
+          <input type="text" value={subcategory} onChange={e => setSubcategory(e.target.value)}
+            className="w-full border rounded-xl px-3 py-2 text-sm focus:outline-none" style={{ borderColor: 'var(--border)' }} />
+        </div>
+        <div>
+          <p className="text-xs font-semibold mb-1" style={{ color: 'var(--text-muted)' }}>Images Count</p>
+          <input type="number" min="0" value={imageCount} onChange={e => setImageCount(e.target.value)}
+            className="w-full border rounded-xl px-3 py-2 text-sm focus:outline-none" style={{ borderColor: 'var(--border)' }} />
+        </div>
+        <div>
+          <p className="text-xs font-semibold mb-1" style={{ color: 'var(--text-muted)' }}>Notes</p>
+          <textarea value={notes} onChange={e => setNotes(e.target.value)} rows={2}
+            className="w-full border rounded-xl px-3 py-2 text-sm focus:outline-none" style={{ borderColor: 'var(--border)' }} />
+        </div>
+      </div>
+      <div className="flex justify-end gap-3 mt-6">
+        <Btn variant="ghost" onClick={onClose}>Cancel</Btn>
+        <Btn variant="primary" onClick={handleSubmit}>Save Changes</Btn>
+      </div>
+    </Modal>
+  );
+}
+
 export default function TeamSessions({ state, computed, dispatch }) {
   const [showAdd, setShowAdd] = useState(false);
   const [confirmDelete, setConfirmDelete] = useState(null);
+  const [sessionToDelete, setSessionToDelete] = useState(null);
+  const [sessionToEdit, setSessionToEdit] = useState(null);
   const [logFilter, setLogFilter] = useState('all');
   const { team, sessions } = state;
   const { memberStats } = computed;
@@ -90,6 +144,16 @@ export default function TeamSessions({ state, computed, dispatch }) {
   function handleDelete(id) {
     dispatch({ type: 'REMOVE_TEAM_MEMBER', payload: { id } });
     setConfirmDelete(null);
+  }
+
+  function handleDeleteSession(id) {
+    dispatch({ type: 'DELETE_SESSION', payload: { id } });
+    setSessionToDelete(null);
+  }
+
+  function handleEditSession(id, updates) {
+    dispatch({ type: 'EDIT_SESSION', payload: { id, updates } });
+    setSessionToEdit(null);
   }
 
   const filteredLog = (logFilter === 'all' ? sessions : sessions.filter(s => s.memberId === logFilter))
@@ -175,14 +239,14 @@ export default function TeamSessions({ state, computed, dispatch }) {
           <table className="w-full text-xs" style={{ borderCollapse: 'collapse' }}>
             <thead style={{ background: '#f8f9ff', position: 'sticky', top: 0 }}>
               <tr>
-                {['Timestamp','Member','Category','Subcategory','Images','Status','Notes'].map(h => (
+                {['Timestamp','Member','Category','Subcategory','Images','Status','Notes','Actions'].map(h => (
                   <th key={h} className="px-4 py-3 text-left font-semibold whitespace-nowrap" style={{ color: 'var(--text-muted)', borderBottom: '1px solid var(--border)' }}>{h}</th>
                 ))}
               </tr>
             </thead>
             <tbody>
               {filteredLog.length === 0 ? (
-                <tr><td colSpan={7} className="py-8 text-center text-sm" style={{ color: 'var(--text-muted)' }}>No sessions logged yet.</td></tr>
+                <tr><td colSpan={8} className="py-8 text-center text-sm" style={{ color: 'var(--text-muted)' }}>No sessions logged yet.</td></tr>
               ) : filteredLog.map(s => {
                 const member = memberById[s.memberId];
                 return (
@@ -201,6 +265,14 @@ export default function TeamSessions({ state, computed, dispatch }) {
                     <td className="px-4 py-2 font-mono font-bold">{s.imageCount}</td>
                     <td className="px-4 py-2"><Badge variant={{ collected:'default', annotated:'warning', reviewed:'blue', approved:'success' }[s.status]}>{s.status}</Badge></td>
                     <td className="px-4 py-2 max-w-xs truncate" style={{ color: 'var(--text-muted)' }}>{s.notes || '—'}</td>
+                    <td className="px-4 py-2 text-right whitespace-nowrap">
+                      <button onClick={() => setSessionToEdit(s)} className="p-1 text-gray-400 hover:text-blue-500 transition-colors" title="Edit">
+                        <Edit2 size={14} />
+                      </button>
+                      <button onClick={() => setSessionToDelete(s)} className="p-1 ml-1 text-gray-400 hover:text-red-500 transition-colors" title="Delete">
+                        <Trash2 size={14} />
+                      </button>
+                    </td>
                   </tr>
                 );
               })}
@@ -216,6 +288,18 @@ export default function TeamSessions({ state, computed, dispatch }) {
           onConfirm={() => handleDelete(confirmDelete.id)}
           onCancel={() => setConfirmDelete(null)}
           confirmLabel="Remove Member" />
+      )}
+      {sessionToDelete && (
+        <ConfirmModal title="Delete Session" danger
+          message="Are you sure you want to delete this session log? This action cannot be undone."
+          onConfirm={() => handleDeleteSession(sessionToDelete.id)}
+          onCancel={() => setSessionToDelete(null)}
+          confirmLabel="Delete Session" />
+      )}
+      {sessionToEdit && (
+        <EditSessionModal session={sessionToEdit} 
+          onSubmit={handleEditSession} 
+          onClose={() => setSessionToEdit(null)} />
       )}
     </div>
   );

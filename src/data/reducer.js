@@ -1,6 +1,6 @@
 import { INITIAL_STATE } from './seedData.js';
 import { db } from './firebase.js';
-import { doc, setDoc, updateDoc, collection } from 'firebase/firestore';
+import { doc, setDoc, updateDoc, deleteDoc, collection } from 'firebase/firestore';
 
 const STORAGE_KEY = 'bdtcollect_v1';
 
@@ -95,6 +95,30 @@ export function reducer(state, action) {
               }
             : s
         ),
+      };
+      break;
+    }
+
+    case 'EDIT_SESSION': {
+      const { id, updates } = action.payload;
+      updateDoc(doc(db, "bdt_sessions", id), updates).catch(console.error);
+      
+      next = {
+        ...state,
+        sessions: state.sessions.map(s =>
+          s.id === id ? { ...s, ...updates } : s
+        ),
+      };
+      break;
+    }
+
+    case 'DELETE_SESSION': {
+      const { id } = action.payload;
+      deleteDoc(doc(db, "bdt_sessions", id)).catch(console.error);
+
+      next = {
+        ...state,
+        sessions: state.sessions.filter(s => s.id !== id),
       };
       break;
     }
