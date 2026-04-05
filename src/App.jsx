@@ -93,7 +93,11 @@ export default function App() {
 
   // Log session handler — used by CollectionTasks and QuickLogFAB
   const handleLog = useCallback((payload) => {
-    dispatch({ type: 'ADD_SESSION', payload });
+    const id = crypto.randomUUID ? crypto.randomUUID() : Math.random().toString(36).slice(2);
+    const timestamp = new Date().toISOString();
+    const finalPayload = { ...payload, id, timestamp };
+    
+    dispatch({ type: 'ADD_SESSION', payload: finalPayload });
     const catLabels = { A: 'Single Note', B: 'Multi-Note', C: 'Occlusion', D: 'Env/Light' };
     const newTotal = computed.totalCollected + (Number(payload.imageCount) || 0);
     addToast(`✓ Logged ${payload.imageCount} images — ${catLabels[payload.category]} · ${payload.subcategory || ''} — Total: ${newTotal.toLocaleString()}`);

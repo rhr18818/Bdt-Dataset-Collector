@@ -52,8 +52,8 @@ export function reducer(state, action) {
   switch (action.type) {
     case 'ADD_SESSION': {
       const session = {
-        id: uid(),
-        timestamp: new Date().toISOString(),
+        id: action.payload.id || uid(),
+        timestamp: action.payload.timestamp || new Date().toISOString(),
         memberId: action.payload.memberId,
         category: action.payload.category,
         subcategory: action.payload.subcategory,
