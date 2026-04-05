@@ -6,12 +6,12 @@ export function useComputed(state) {
     const { sessions, qcChecks, team } = state;
 
     // --- Total collected ---
-    const totalCollected = sessions.reduce((sum, s) => sum + s.imageCount, 0);
+    const totalCollected = sessions.reduce((sum, s) => sum + (Number(s.imageCount) || 0), 0);
 
     // --- By category ---
     const collectedByCategory = { A: 0, B: 0, C: 0, D: 0 };
     for (const s of sessions) {
-      if (s.category in collectedByCategory) collectedByCategory[s.category] += s.imageCount;
+      if (s.category in collectedByCategory) collectedByCategory[s.category] += (Number(s.imageCount) || 0);
     }
 
     // --- B combinations ---
@@ -19,20 +19,20 @@ export function useComputed(state) {
     for (const combo of B_COMBINATIONS) collectedByCombination[combo.key] = 0;
     for (const s of sessions) {
       if (s.category === 'B' && s.subcategory && collectedByCombination[s.subcategory] !== undefined) {
-        collectedByCombination[s.subcategory] += s.imageCount;
+        collectedByCombination[s.subcategory] += (Number(s.imageCount) || 0);
       }
     }
 
     // --- B random pool ---
     const bRandomCollected = sessions
       .filter(s => s.category === 'B' && s.subcategory === 'random')
-      .reduce((sum, s) => sum + s.imageCount, 0);
+      .reduce((sum, s) => sum + (Number(s.imageCount) || 0), 0);
 
     // --- C subtasks ---
     const collectedByCSubtask = {};
     for (const s of sessions) {
       if (s.category === 'C' && s.subcategory) {
-        collectedByCSubtask[s.subcategory] = (collectedByCSubtask[s.subcategory] || 0) + s.imageCount;
+        collectedByCSubtask[s.subcategory] = (collectedByCSubtask[s.subcategory] || 0) + (Number(s.imageCount) || 0);
       }
     }
 
@@ -43,37 +43,37 @@ export function useComputed(state) {
         for (const env of (s.environments || [])) {
           for (const light of (s.lighting || [])) {
             const k = `${env}||${light}`;
-            collectedByDCell[k] = (collectedByDCell[k] || 0) + s.imageCount;
+            collectedByDCell[k] = (collectedByDCell[k] || 0) + (Number(s.imageCount) || 0);
           }
         }
       }
     }
 
     // --- By denomination ---
-    const collectedByDenomination = { 10: 0, 20: 0, 50: 0, 100: 0, 200: 0, 500: 0, 1000: 0 };
+    const collectedByDenomination = { 2: 0, 5: 0, 10: 0, 20: 0, 50: 0, 100: 0, 200: 0, 500: 0, 1000: 0 };
     for (const s of sessions) {
       for (const d of (s.denominations || [])) {
-        if (d in collectedByDenomination) collectedByDenomination[d] += s.imageCount;
+        if (d in collectedByDenomination) collectedByDenomination[d] += (Number(s.imageCount) || 0);
       }
     }
 
     // --- A denominations ---
-    const collectedByADenom = { 10: 0, 20: 0, 50: 0, 100: 0, 200: 0, 500: 0, 1000: 0 };
+    const collectedByADenom = { 2: 0, 5: 0, 10: 0, 20: 0, 50: 0, 100: 0, 200: 0, 500: 0, 1000: 0 };
     for (const s of sessions) {
       if (s.category === 'A') {
         for (const d of (s.denominations || [])) {
-          if (d in collectedByADenom) collectedByADenom[d] += s.imageCount;
+          if (d in collectedByADenom) collectedByADenom[d] += (Number(s.imageCount) || 0);
         }
       }
     }
 
     // --- Pipeline status ---
-    const totalAnnotated = sessions.filter(s => ['annotated','reviewed','approved'].includes(s.status)).reduce((sum, s) => sum + s.imageCount, 0);
+    const totalAnnotated = sessions.filter(s => ['annotated','reviewed','approved'].includes(s.status)).reduce((sum, s) => sum + (Number(s.imageCount) || 0), 0);
     const pendingAnnotation = sessions.filter(s => s.status === 'collected');
     const pendingReview = sessions.filter(s => s.status === 'annotated');
     const pendingApproval = sessions.filter(s => s.status === 'reviewed');
     const approved = sessions.filter(s => s.status === 'approved');
-    const totalApproved = approved.reduce((sum, s) => sum + s.imageCount, 0);
+    const totalApproved = approved.reduce((sum, s) => sum + (Number(s.imageCount) || 0), 0);
 
     // --- IAA ---
     const iaaScore = qcChecks.length
@@ -104,8 +104,8 @@ export function useComputed(state) {
     const memberStats = {};
     for (const m of team) {
       const mSessions = sessions.filter(s => s.memberId === m.id);
-      const collected = mSessions.reduce((sum, s) => sum + s.imageCount, 0);
-      const annotated = sessions.filter(s => s.annotatedBy === m.id).reduce((sum, s) => sum + s.imageCount, 0);
+      const collected = mSessions.reduce((sum, s) => sum + (Number(s.imageCount) || 0), 0);
+      const annotated = sessions.filter(s => s.annotatedBy === m.id).reduce((sum, s) => sum + (Number(s.imageCount) || 0), 0);
       const lastSession = mSessions.length ? mSessions[mSessions.length - 1] : null;
       const qcChecksForMember = qcByAnnotator[m.id] || [];
       const avgAccuracy = qcChecksForMember.length
@@ -130,7 +130,7 @@ export function useComputed(state) {
       const dateStr = d.toISOString().slice(0, 10);
       const count = sessions
         .filter(s => s.timestamp.slice(0, 10) === dateStr)
-        .reduce((sum, s) => sum + s.imageCount, 0);
+        .reduce((sum, s) => sum + (Number(s.imageCount) || 0), 0);
       dailyActivity.push({ date: dateStr, label: dateStr.slice(5), count });
     }
 

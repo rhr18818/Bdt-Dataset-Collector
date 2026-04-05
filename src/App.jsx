@@ -95,7 +95,7 @@ export default function App() {
   const handleLog = useCallback((payload) => {
     dispatch({ type: 'ADD_SESSION', payload });
     const catLabels = { A: 'Single Note', B: 'Multi-Note', C: 'Occlusion', D: 'Env/Light' };
-    const newTotal = computed.totalCollected + (payload.imageCount || 0);
+    const newTotal = computed.totalCollected + (Number(payload.imageCount) || 0);
     addToast(`✓ Logged ${payload.imageCount} images — ${catLabels[payload.category]} · ${payload.subcategory || ''} — Total: ${newTotal.toLocaleString()}`);
   }, [computed.totalCollected, addToast]);
 

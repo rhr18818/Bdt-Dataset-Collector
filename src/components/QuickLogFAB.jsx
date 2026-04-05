@@ -16,14 +16,34 @@ export default function QuickLogFAB({ team, onLog }) {
 
   function submit() {
     if (!category || !count || !memberId) return;
+    
+    let denoms = [];
+    let sum = 0;
+    let envs = [];
+    let lights = [];
+
+    if (category === 'A' && subtask) {
+      const match = subtask.match(/single:(\d+)tk/);
+      if (match) denoms = [parseInt(match[1], 10)];
+    } else if (category === 'B' && subtask && subtask !== 'random') {
+      denoms = subtask.split('+').map(d => parseInt(d, 10));
+      sum = denoms.reduce((a, b) => a + b, 0);
+    } else if (category === 'D' && subtask && subtask.includes('||')) {
+      const parts = subtask.split('||');
+      if (parts.length === 2) {
+        envs = [parts[0]];
+        lights = [parts[1]];
+      }
+    }
+
     onLog({
       category,
       subcategory: subtask || `quick:${category}`,
-      denominations: [],
-      groundTruthSum: 0,
+      denominations: denoms,
+      groundTruthSum: sum,
       conditions: [],
-      environments: [],
-      lighting: [],
+      environments: envs,
+      lighting: lights,
       arrangements: [],
       imageCount: parseInt(count),
       memberId,
