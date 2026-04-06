@@ -7,7 +7,7 @@ import {
 const MAIN_NAV = [
   { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
   { id: 'collection', label: 'Collection Tasks', icon: Camera },
-  { id: 'annotation', label: 'Annotation Queue', icon: Tag },
+  { id: 'review', label: 'Review Queue', icon: Tag },
 ];
 
 const ADMIN_NAV = [

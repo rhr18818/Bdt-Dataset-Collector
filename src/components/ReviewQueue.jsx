@@ -10,25 +10,35 @@ const STATUS_COLORS = {
   approved: 'success',
 };
 
-function PipelineBar({ computed }) {
-  const { pendingAnnotation, pendingReview, pendingApproval, approved, totalCollected } = computed;
+function PipelineBar({ state, computed }) {
+  const { totalCollected } = computed;
+  const { sessions } = state;
+  
+  const pendingReviewDataset = sessions.filter(s => s.status === 'collected' && !s.datasetChecked).reduce((s, r) => s + (Number(r.imageCount) || 0), 0);
+  const pendingAnnotation = sessions.filter(s => s.status === 'collected' && s.datasetChecked).reduce((s, r) => s + (Number(r.imageCount) || 0), 0);
+  const pendingReviewAnnot = sessions.filter(s => s.status === 'annotated').reduce((s, r) => s + (Number(r.imageCount) || 0), 0);
+  const pendingApproval = sessions.filter(s => s.status === 'reviewed').reduce((s, r) => s + (Number(r.imageCount) || 0), 0);
+  const totalApproved = sessions.filter(s => s.status === 'approved').reduce((s, r) => s + (Number(r.imageCount) || 0), 0);
+
   const stages = [
-    { label: 'Collected', count: totalCollected, color: 'var(--accent)' },
-    { label: 'Pending Annotation', count: pendingAnnotation.reduce((s, r) => s + r.imageCount, 0), color: 'var(--accent-warm)' },
-    { label: 'Pending Review', count: pendingReview.reduce((s, r) => s + r.imageCount, 0), color: '#7c3aed' },
-    { label: 'Approved', count: computed.totalApproved, color: 'var(--success)' },
+    { label: 'Collected', count: totalCollected, color: 'var(--text-muted)' },
+    { label: 'Dataset QA', count: pendingReviewDataset, color: '#f59e0b' },
+    { label: 'To Annotate', count: pendingAnnotation, color: 'var(--accent-warm)' },
+    { label: 'Annotate QA', count: pendingReviewAnnot, color: '#7c3aed' },
+    { label: 'To Approve', count: pendingApproval, color: '#2563eb' },
+    { label: 'Approved', count: totalApproved, color: 'var(--success)' },
   ];
   return (
-    <div className="rounded-xl p-5 shadow-sm mb-5" style={{ background: '#fff', border: '1px solid var(--border)' }}>
-      <p className="text-sm font-semibold mb-4" style={{ color: 'var(--text-primary)' }}>Annotation Pipeline</p>
-      <div className="flex items-center gap-2 overflow-x-auto">
+    <div className="rounded-xl p-4 md:p-5 shadow-sm mb-5 w-full overflow-hidden" style={{ background: '#fff', border: '1px solid var(--border)' }}>
+      <p className="text-sm font-semibold mb-4" style={{ color: 'var(--text-primary)' }}>Review Pipeline</p>
+      <div className="flex items-center gap-2 overflow-x-auto pb-3 -mb-3 snap-x scrollbar-thin md:scrollbar-default">
         {stages.map((s, i) => (
-          <div key={s.label} className="flex items-center gap-2">
-            <div className="flex flex-col items-center px-4 py-3 rounded-xl text-center flex-shrink-0" style={{ border: `2px solid ${s.color}`, minWidth: 110 }}>
-              <p className="text-2xl font-bold font-mono" style={{ color: s.color }}>{s.count.toLocaleString()}</p>
-              <p className="text-xs mt-0.5" style={{ color: 'var(--text-muted)', fontFamily: 'Inter' }}>{s.label}</p>
+          <div key={s.label} className="flex items-center gap-2 snap-center flex-shrink-0">
+            <div className="flex flex-col items-center px-1 md:px-2 py-3 rounded-xl text-center flex-shrink-0 w-[85px] sm:w-[95px] md:w-[110px]" style={{ border: `2px solid ${s.color}` }}>
+              <p className="text-lg sm:text-xl md:text-2xl font-bold font-mono" style={{ color: s.color }}>{s.count.toLocaleString()}</p>
+              <p className="text-[9px] sm:text-[10px] md:text-xs mt-0.5 leading-tight whitespace-nowrap" style={{ color: 'var(--text-muted)', fontFamily: 'Inter' }}>{s.label}</p>
             </div>
-            {i < stages.length - 1 && <span className="text-lg" style={{ color: '#d1d5db' }}>→</span>}
+            {i < stages.length - 1 && <span className="text-lg md:text-xl flex-shrink-0" style={{ color: '#d1d5db' }}>→</span>}
           </div>
         ))}
       </div>
@@ -36,7 +46,7 @@ function PipelineBar({ computed }) {
   );
 }
 
-export default function AnnotationQueue({ state, computed, currentUser, dispatch }) {
+export default function ReviewQueue({ state, computed, currentUser, dispatch }) {
   const { sessions, team } = state;
   const isLead = currentUser?.role === 'lead';
   
@@ -61,8 +71,8 @@ export default function AnnotationQueue({ state, computed, currentUser, dispatch
   const { memberStats } = computed;
 
   return (
-    <div className="p-4 md:p-6 flex flex-col gap-5">
-      <PipelineBar computed={computed} />
+    <div className="p-4 md:p-6 flex flex-col gap-5 overflow-hidden">
+      <PipelineBar state={state} computed={computed} />
 
       {/* FILTERS */}
       <div className="flex flex-wrap gap-2 items-center">
@@ -93,14 +103,14 @@ export default function AnnotationQueue({ state, computed, currentUser, dispatch
           <table className="w-full text-xs" style={{ borderCollapse: 'collapse' }}>
             <thead style={{ background: '#f8f9ff' }}>
               <tr>
-                {['Session ID','Date','Collector','Category','Sub / Denom','Images','Status','Action'].map(h => (
+                {['Session ID','Date','Collector','Category','Sub / Denom','Images','Dataset OK?','Status','Action'].map(h => (
                   <th key={h} className="px-4 py-3 text-left font-semibold" style={{ color: 'var(--text-muted)', borderBottom: '1px solid var(--border)', whiteSpace: 'nowrap' }}>{h}</th>
                 ))}
               </tr>
             </thead>
             <tbody>
               {filtered.length === 0 ? (
-                <tr><td colSpan={8}>
+                <tr><td colSpan={9}>
                   <EmptyState icon={Tag} title="No sessions match your filters" description="Try adjusting the filter dropdowns above." />
                 </td></tr>
               ) : filtered.map(s => {
@@ -122,6 +132,16 @@ export default function AnnotationQueue({ state, computed, currentUser, dispatch
                       {s.subcategory || '—'}
                     </td>
                     <td className="px-4 py-3 font-mono font-bold" style={{ color: 'var(--text-primary)' }}>{s.imageCount.toLocaleString()}</td>
+                    <td className="px-4 py-3 text-center">
+                      <input 
+                        type="checkbox" 
+                        checked={s.datasetChecked || false} 
+                        onChange={e => dispatch({ type: 'EDIT_SESSION', payload: { id: s.id, updates: { datasetChecked: e.target.checked } } })}
+                        disabled={!isLead && s.memberId !== currentUser.id}
+                        className="w-4 h-4 text-blue-600 rounded border-gray-300 focus:ring-blue-500 cursor-pointer"
+                        title="Check if images are good enough & safely stored"
+                      />
+                    </td>
                     <td className="px-4 py-3"><Badge variant={STATUS_COLORS[s.status]}>{s.status}</Badge></td>
                     <td className="px-4 py-3">
                       {isLead || s.memberId === currentUser.id ? (

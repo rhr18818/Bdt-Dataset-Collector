@@ -5,7 +5,7 @@ import { useComputed } from './hooks/useComputed.js';
 import Layout from './components/Layout.jsx';
 import Dashboard from './components/Dashboard.jsx';
 import CollectionTasks from './components/CollectionTasks.jsx';
-import AnnotationQueue from './components/AnnotationQueue.jsx';
+import ReviewQueue from './components/ReviewQueue.jsx';
 import QualityControl from './components/QualityControl.jsx';
 import TeamSessions from './components/TeamSessions.jsx';
 import ExportReport from './components/ExportReport.jsx';
@@ -137,7 +137,7 @@ export default function App() {
               <p className="font-bold text-sm" style={{ color: 'var(--accent)' }}>Welcome to BDT-Collect!</p>
               <p className="text-xs mt-1" style={{ color: '#1e40af' }}>
                 <strong>3-step workflow:</strong> (1) Go to <em>Collection Tasks</em> → click <em>Log Images</em> to record your session.
-                (2) Go to <em>Annotation Queue</em> → update status after annotating.
+                (2) Go to <em>Review Queue</em> → update status after dataset review & annotating.
                 (3) Team lead reviews → marks as <em>Approved</em> in <em>Quality Control</em>.
               </p>
               <p className="text-xs mt-1" style={{ color: '#1e40af' }}>
@@ -152,7 +152,7 @@ export default function App() {
         {/* View Router */}
         {activeView === 'dashboard' && <Dashboard {...viewProps} />}
         {activeView === 'collection' && <CollectionTasks {...viewProps} onLog={handleLog} />}
-        {activeView === 'annotation' && <AnnotationQueue {...viewProps} />}
+        {activeView === 'review' && <ReviewQueue {...viewProps} />}
         {activeView === 'qc' && isLead ? <QualityControl {...viewProps} /> : null}
         {activeView === 'team' && isLead ? <TeamSessions {...viewProps} /> : null}
         {activeView === 'export' && isLead ? <ExportReport {...viewProps} /> : null}
