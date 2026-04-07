@@ -54,6 +54,27 @@ export const B_COMBINATIONS = [
   { key: '1000+200+50', notes: 3, denoms: [1000,200,50], sum: 1250, target: 60 },
   { key: '100+20+10', notes: 3, denoms: [100,20,10], sum: 130, target: 60 },
   { key: '10+5+2', notes: 3, denoms: [10,5,2], sum: 17, target: 40 },
+  // 4-note
+  { key: '500+200+100+50', notes: 4, denoms: [500,200,100,50], sum: 850, target: 50 },
+  { key: '1000+500+200+100', notes: 4, denoms: [1000,500,200,100], sum: 1800, target: 50 },
+  { key: '100+100+50+20', notes: 4, denoms: [100,100,50,20], sum: 270, target: 50 },
+  { key: '500+100+100+50', notes: 4, denoms: [500,100,100,50], sum: 750, target: 50 },
+  { key: '200+100+50+20', notes: 4, denoms: [200,100,50,20], sum: 370, target: 50 },
+  { key: '1000+200+100+50', notes: 4, denoms: [1000,200,100,50], sum: 1350, target: 40 },
+  { key: '100+50+20+10', notes: 4, denoms: [100,50,20,10], sum: 180, target: 50 },
+  { key: '500+500+100+100', notes: 4, denoms: [500,500,100,100], sum: 1200, target: 40 },
+  // 5-note
+  { key: '500+200+100+50+20', notes: 5, denoms: [500,200,100,50,20], sum: 870, target: 40 },
+  { key: '1000+500+200+100+50', notes: 5, denoms: [1000,500,200,100,50], sum: 1850, target: 40 },
+  { key: '100+100+50+20+10', notes: 5, denoms: [100,100,50,20,10], sum: 280, target: 40 },
+  { key: '500+100+100+50+50', notes: 5, denoms: [500,100,100,50,50], sum: 800, target: 35 },
+  { key: '200+200+100+50+20', notes: 5, denoms: [200,200,100,50,20], sum: 570, target: 40 },
+  // 6-note
+  { key: '1000+500+200+100+50+20', notes: 6, denoms: [1000,500,200,100,50,20], sum: 1870, target: 35 },
+  { key: '500+200+100+100+50+20', notes: 6, denoms: [500,200,100,100,50,20], sum: 970, target: 35 },
+  { key: '100+100+50+50+20+10', notes: 6, denoms: [100,100,50,50,20,10], sum: 330, target: 35 },
+  { key: '1000+1000+500+200+100+50', notes: 6, denoms: [1000,1000,500,200,100,50], sum: 2850, target: 30 },
+  { key: '500+500+200+100+50+20', notes: 6, denoms: [500,500,200,100,50,20], sum: 1370, target: 30 },
 ];
 
 export const C_SUBTASKS = [

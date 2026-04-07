@@ -494,11 +494,129 @@ function CategoryBSection({ computed, targets, team, onLog }) {
   const [openCombo, setOpenCombo] = useState(null);
   const [showRandom, setShowRandom] = useState(false);
   const [expanded, setExpanded] = useState(true);
+  const [activeNoteCount, setActiveNoteCount] = useState(2);
+  const [completedExpanded, setCompletedExpanded] = useState(false);
+  const [toast, setToast] = useState(null);
+  const [prevCollected, setPrevCollected] = useState(computed.collectedByCombination);
+  const [animatingKeys, setAnimatingKeys] = useState({});
+
   const { collectedByCombination, bRandomCollected } = computed;
   const total = computed.collectedByCategory.B;
 
+  useEffect(() => {
+    const newlyCompleted = [];
+    B_COMBINATIONS.forEach(combo => {
+      const prevCnt = prevCollected[combo.key] || 0;
+      const currCnt = collectedByCombination[combo.key] || 0;
+      const tgt = targets.B_combinations?.[combo.key] || combo.target;
+      if (prevCnt < tgt && currCnt >= tgt) newlyCompleted.push(combo);
+    });
+
+    if (newlyCompleted.length > 0) {
+      const newest = newlyCompleted[newlyCompleted.length - 1];
+      const tgt = targets.B_combinations?.[newest.key] || newest.target;
+      setToast(`✓ Combination [${newest.key.replace(/\+/g, '+')}] completed! ${collectedByCombination[newest.key]}/${tgt} images logged.`);
+      setTimeout(() => setToast(null), 3000);
+
+      const newAnimInfos = {};
+      newlyCompleted.forEach(c => newAnimInfos[c.key] = true);
+      setAnimatingKeys(prev => ({ ...prev, ...newAnimInfos }));
+      
+      setTimeout(() => {
+        setAnimatingKeys(prev => {
+          const next = { ...prev };
+          newlyCompleted.forEach(c => delete next[c.key]);
+          return next;
+        });
+      }, 800);
+    }
+    setPrevCollected(collectedByCombination);
+  }, [collectedByCombination, prevCollected, targets]);
+
+  const currentCombos = B_COMBINATIONS.filter(c => c.notes === activeNoteCount);
+  
+  const todoCombos = [];
+  const completedCombos = [];
+
+  currentCombos.forEach(combo => {
+    const cnt = collectedByCombination[combo.key] || 0;
+    const tgt = targets.B_combinations?.[combo.key] || combo.target;
+    // Keep in ToDo if animating
+    if (cnt >= tgt && !animatingKeys[combo.key]) {
+      completedCombos.push({ combo, cnt, tgt });
+    } else {
+      todoCombos.push({ combo, cnt, tgt });
+    }
+  });
+
+  const remainingImages = todoCombos.reduce((sum, item) => sum + Math.max(0, item.tgt - item.cnt), 0);
+
+  const renderTable = (items, isCompleted) => (
+    <div className="overflow-x-auto">
+      <table className="w-full text-xs" style={{ borderCollapse: 'separate', borderSpacing: 0 }}>
+        <thead>
+          <tr style={{ background: isCompleted ? 'transparent' : '#f8f9ff' }}>
+            {['Notes','Denominations','Sum','Target','Collected','Done',''].map(h => (
+              <th key={h} className="px-3 py-2 text-left font-semibold" style={{ color: 'var(--text-muted)', borderBottom: `1px solid ${isCompleted ? '#dcfce7' : 'var(--border)'}`, whiteSpace: 'nowrap' }}>{h}</th>
+            ))}
+          </tr>
+        </thead>
+        <tbody>
+          {items.map(({ combo, cnt, tgt }) => {
+            const pct = Math.round(cnt / tgt * 100);
+            const done = cnt >= tgt && !animatingKeys[combo.key];
+            const isAnim = animatingKeys[combo.key];
+            const rowStyle = { 
+              transition: 'all 0.8s ease',
+              background: isAnim ? '#bbf7d0' : isCompleted ? '#f0fdf4' : 'transparent',
+              borderColor: isCompleted ? '#dcfce7' : 'var(--border)',
+            };
+
+            return (
+              <tr key={combo.key} className={`${!isCompleted && !isAnim ? 'hover:bg-gray-50' : ''} border-b`} style={rowStyle}>
+                <td className="px-3 py-2">
+                  <div className="flex items-center gap-2">
+                    {isCompleted && <span style={{ color: '#22c55e', fontSize: '10px' }}>●</span>}
+                    <span className="px-1.5 py-0.5 rounded text-xs font-mono font-bold" style={{ background: isCompleted ? '#dcfce7' : '#f0f4ff', color: isCompleted ? '#166534' : 'var(--accent)' }}>{combo.notes}</span>
+                  </div>
+                </td>
+                <td className="px-3 py-2 font-mono" style={{ color: 'var(--text-primary)', whiteSpace: 'nowrap' }}>
+                  {combo.denoms.map(d => `৳${d}`).join('+')}
+                </td>
+                <td className="px-3 py-2 font-mono font-bold" style={{ color: 'var(--accent-warm)' }}>৳{combo.sum}</td>
+                <td className="px-3 py-2 font-mono" style={{ color: 'var(--text-muted)' }}>{tgt}</td>
+                <td className="px-3 py-2 font-mono font-semibold" style={{ color: 'var(--text-primary)' }}>{cnt}</td>
+                <td className="px-3 py-2">
+                  {done ? (
+                    <span className="flex items-center gap-1 text-xs" style={{ color: 'var(--success)' }}><CheckCircle size={14} />Done</span>
+                  ) : (
+                    <div style={{ minWidth: 80 }}>
+                      <div className="h-1.5 rounded-full overflow-hidden" style={{ background: isCompleted ? '#bbf7d0' : '#e5e7eb' }}>
+                        <div className="h-full rounded-full progress-bar" style={{ width: `${pct}%`, background: pct >= 80 ? 'var(--success)' : pct >= 40 ? 'var(--accent-warm)' : 'var(--danger)' }} />
+                      </div>
+                      <p className="text-xs font-mono mt-0.5" style={{ color: 'var(--text-muted)' }}>{pct}%</p>
+                    </div>
+                  )}
+                </td>
+                <td className="px-3 py-2 text-right">
+                  <Btn variant={isCompleted ? "secondary" : "primary"} size="sm" onClick={() => setOpenCombo(combo)}>Log</Btn>
+                </td>
+              </tr>
+            );
+          })}
+        </tbody>
+      </table>
+    </div>
+  );
+
   return (
-    <div className="rounded-xl overflow-hidden" style={{ border: '1px solid var(--border)', background: '#fff' }}>
+    <div className="rounded-xl overflow-hidden relative" style={{ border: '1px solid var(--border)', background: '#fff' }}>
+      {toast && (
+        <div className="absolute top-4 right-4 z-10 px-4 py-2 rounded-lg shadow-lg text-sm font-medium animate-fade-in" style={{ background: '#22c55e', color: '#fff' }}>
+          {toast}
+        </div>
+      )}
+
       <button onClick={() => setExpanded(e => !e)} className="w-full flex items-center gap-4 px-5 py-4 hover:bg-gray-50 transition-colors text-left">
         <div className="w-8 h-8 rounded-lg flex items-center justify-center font-bold text-white text-sm" style={{ background: '#d97706' }}>B</div>
         <div className="flex-1">
@@ -510,56 +628,62 @@ function CategoryBSection({ computed, targets, team, onLog }) {
 
       {expanded && (
         <div className="border-t" style={{ borderColor: 'var(--border)' }}>
+          {/* Note Count Selector Tabs */}
+          <div className="px-5 py-3 border-b overflow-x-auto whitespace-nowrap" style={{ borderColor: 'var(--border)', background: '#fafafa' }}>
+            <div className="flex gap-2">
+              {[2, 3, 4, 5, 6].map(num => (
+                <button
+                  key={num}
+                  onClick={() => setActiveNoteCount(num)}
+                  className="px-4 py-1.5 rounded-full text-xs font-semibold transition-colors"
+                  style={{
+                    background: activeNoteCount === num ? '#2563eb' : 'transparent',
+                    color: activeNoteCount === num ? '#fff' : '#4b5563',
+                    border: `1px solid ${activeNoteCount === num ? '#2563eb' : '#d1d5db'}`
+                  }}
+                >
+                  {num} Notes
+                </button>
+              ))}
+            </div>
+          </div>
+
           {/* B1: Defined Combinations */}
           <div className="px-5 py-4">
-            <p className="text-sm font-semibold mb-3" style={{ color: 'var(--text-primary)' }}>B1 — Defined Combinations</p>
-            <div className="overflow-x-auto">
-              <table className="w-full text-xs" style={{ borderCollapse: 'separate', borderSpacing: 0 }}>
-                <thead>
-                  <tr style={{ background: '#f8f9ff' }}>
-                    {['Notes','Denominations','Sum','Target','Collected','Done',''].map(h => (
-                      <th key={h} className="px-3 py-2 text-left font-semibold" style={{ color: 'var(--text-muted)', borderBottom: '1px solid var(--border)', whiteSpace: 'nowrap' }}>{h}</th>
-                    ))}
-                  </tr>
-                </thead>
-                <tbody>
-                  {B_COMBINATIONS.map(combo => {
-                    const cnt = collectedByCombination[combo.key] || 0;
-                    const tgt = targets.B_combinations?.[combo.key] || combo.target;
-                    const pct = Math.round(cnt / tgt * 100);
-                    const done = cnt >= tgt;
-                    return (
-                      <tr key={combo.key} className="hover:bg-gray-50 border-b transition-colors" style={{ borderColor: 'var(--border)' }}>
-                        <td className="px-3 py-2">
-                          <span className="px-1.5 py-0.5 rounded text-xs font-mono font-bold" style={{ background: '#f0f4ff', color: 'var(--accent)' }}>{combo.notes}</span>
-                        </td>
-                        <td className="px-3 py-2 font-mono" style={{ color: 'var(--text-primary)', whiteSpace: 'nowrap' }}>
-                          {combo.denoms.map(d => `৳${d}`).join('+')}
-                        </td>
-                        <td className="px-3 py-2 font-mono font-bold" style={{ color: 'var(--accent-warm)' }}>৳{combo.sum}</td>
-                        <td className="px-3 py-2 font-mono" style={{ color: 'var(--text-muted)' }}>{tgt}</td>
-                        <td className="px-3 py-2 font-mono font-semibold" style={{ color: 'var(--text-primary)' }}>{cnt}</td>
-                        <td className="px-3 py-2">
-                          {done ? (
-                            <span className="flex items-center gap-1 text-xs" style={{ color: 'var(--success)' }}><CheckCircle size={14} />Done</span>
-                          ) : (
-                            <div style={{ minWidth: 80 }}>
-                              <div className="h-1.5 rounded-full overflow-hidden" style={{ background: '#e5e7eb' }}>
-                                <div className="h-full rounded-full progress-bar" style={{ width: `${pct}%`, background: pct >= 80 ? 'var(--success)' : pct >= 40 ? 'var(--accent-warm)' : 'var(--danger)' }} />
-                              </div>
-                              <p className="text-xs font-mono mt-0.5" style={{ color: 'var(--text-muted)' }}>{pct}%</p>
-                            </div>
-                          )}
-                        </td>
-                        <td className="px-3 py-2">
-                          <Btn variant="primary" size="sm" onClick={() => setOpenCombo(combo)}>Log</Btn>
-                        </td>
-                      </tr>
-                    );
-                  })}
-                </tbody>
-              </table>
-            </div>
+            <p className="text-sm font-semibold mb-1" style={{ color: 'var(--text-primary)' }}>B1 — Defined Combinations ({activeNoteCount} Notes)</p>
+            <p className="text-xs mb-3 font-medium" style={{ color: 'var(--text-muted)' }}>
+              {completedCombos.length} of {currentCombos.length} combinations complete — {remainingImages} images remaining to target
+            </p>
+            
+            {/* To Do Section */}
+            {todoCombos.length > 0 && (
+              <div className="mb-4">
+                <p className="text-xs font-semibold uppercase tracking-wide mb-2" style={{ color: 'var(--text-muted)' }}>To Do — {todoCombos.length} combinations remaining</p>
+                {renderTable(todoCombos, false)}
+              </div>
+            )}
+
+            {/* Completed Section */}
+            {completedCombos.length > 0 && (
+              <div className="rounded-lg overflow-hidden transition-all text-sm mb-2" style={{ border: '1px solid #dcfce7', background: '#f0fdf4' }}>
+                <button onClick={() => setCompletedExpanded(e => !e)} className="w-full flex items-center gap-2 px-4 py-3 hover:bg-green-50 transition-colors text-left">
+                  <CheckCircle size={16} style={{ color: '#22c55e' }} />
+                  <span className="font-semibold text-green-800 flex-1">Completed — {completedCombos.length} combinations ✓</span>
+                  {completedExpanded ? <ChevronDown size={14} style={{ color: '#166534' }} /> : <ChevronRight size={14} style={{ color: '#166534' }} />}
+                </button>
+                {completedExpanded && (
+                  <div className="border-t px-4 pb-4 pt-2" style={{ borderColor: '#dcfce7' }}>
+                    {renderTable(completedCombos, true)}
+                  </div>
+                )}
+              </div>
+            )}
+            
+            {todoCombos.length === 0 && completedCombos.length === 0 && (
+               <div className="py-6 text-center text-sm" style={{ color: 'var(--text-muted)' }}>
+                 No {activeNoteCount}-note combinations defined.
+               </div>
+            )}
           </div>
 
           {/* B2: Random combinations */}
