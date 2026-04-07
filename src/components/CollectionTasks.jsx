@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Camera, ChevronDown, ChevronRight, CheckCircle, Plus, Fingerprint, Layers, FileSymlink, Maximize } from 'lucide-react';
+import { Camera, ChevronDown, ChevronRight, CheckCircle, Plus, Fingerprint, Layers, FileSymlink, Maximize, ExternalLink } from 'lucide-react';
 import { Modal, ProgressBar, Badge, EmptyState, Btn, RingProgress } from './ui/index.jsx';
 import {
   DENOMINATIONS, CONDITIONS, ENVIRONMENTS, LIGHTING, ARRANGEMENTS, BG_TYPES,
@@ -441,8 +441,22 @@ function CategoryDModal({ env, light, team, onSubmit, onClose }) {
   );
 }
 
+  // ── Helpers ──────────────────────────────────────────────────────────────
+function DriveUploadLink({ activeMember }) {
+  if (!activeMember?.driveLink) {
+    return <span className="text-[10px] sm:text-xs" style={{ color: '#9ca3af' }}>[Set Drive link in Team tab]</span>;
+  }
+  return (
+    <a href={activeMember.driveLink} target="_blank" rel="noopener noreferrer" onClick={(e) => e.stopPropagation()}
+       className="flex flex-shrink-0 items-center justify-center gap-1 hover:underline transition-colors px-1 sm:px-2 py-1 text-[10px] sm:text-xs whitespace-nowrap"
+       style={{ color: '#2563eb' }}>
+       <ExternalLink size={12} /> Upload to Drive ↗
+    </a>
+  );
+}
+
 // ── Category A Section ────────────────────────────────────────────────────
-function CategoryASection({ computed, targets, team, onLog }) {
+function CategoryASection({ computed, targets, team, onLog, activeMember }) {
   const [openModal, setOpenModal] = useState(null);
   const [expanded, setExpanded] = useState(true);
   const { collectedByADenom } = computed;
@@ -451,14 +465,17 @@ function CategoryASection({ computed, targets, team, onLog }) {
 
   return (
     <div className="rounded-xl overflow-hidden" style={{ border: '1px solid var(--border)', background: '#fff' }}>
-      <button onClick={() => setExpanded(e => !e)} className="w-full flex items-center gap-4 px-5 py-4 hover:bg-gray-50 transition-colors text-left">
+      <button onClick={() => setExpanded(e => !e)} className="w-full flex items-center gap-4 px-5 py-4 hover:bg-gray-50 transition-colors text-left relative">
         <div className="w-8 h-8 rounded-lg flex items-center justify-center font-bold text-white text-sm" style={{ background: '#2563eb' }}>A</div>
         <div className="flex-1">
-          <p className="font-semibold text-sm" style={{ color: 'var(--text-primary)' }}>Single Note Images</p>
+          <div className="flex items-center justify-between pb-1">
+            <p className="font-semibold text-sm" style={{ color: 'var(--text-primary)' }}>Single Note Images</p>
+            {expanded && <DriveUploadLink activeMember={activeMember} />}
+          </div>
           <p className="text-xs" style={{ color: 'var(--text-muted)' }}>Target: {target.toLocaleString()} · Collected: <span className="font-mono font-semibold">{total.toLocaleString()}</span></p>
         </div>
         <ProgressBar value={total} max={target} color="#2563eb" height={6} />
-        <span className="w-10 text-right text-sm font-mono font-bold" style={{ color: '#2563eb' }}>{Math.round(total/target*100)}%</span>
+        <span className="w-10 text-right text-sm font-mono font-bold hidden sm:inline" style={{ color: '#2563eb' }}>{Math.round(total/target*100)}%</span>
         {expanded ? <ChevronDown size={16} style={{ color: 'var(--text-muted)' }} /> : <ChevronRight size={16} style={{ color: 'var(--text-muted)' }} />}
       </button>
       {expanded && (
@@ -490,7 +507,7 @@ function CategoryASection({ computed, targets, team, onLog }) {
 }
 
 // ── Category B Section ────────────────────────────────────────────────────
-function CategoryBSection({ computed, targets, team, onLog, currentUser, dispatch }) {
+function CategoryBSection({ computed, targets, team, onLog, currentUser, dispatch, activeMember }) {
   const [openCombo, setOpenCombo] = useState(null);
   const [showRandom, setShowRandom] = useState(false);
   const [expanded, setExpanded] = useState(true);
@@ -657,10 +674,13 @@ function CategoryBSection({ computed, targets, team, onLog, currentUser, dispatc
         </div>
       )}
 
-      <button onClick={() => setExpanded(e => !e)} className="w-full flex items-center gap-4 px-5 py-4 hover:bg-gray-50 transition-colors text-left">
+      <button onClick={() => setExpanded(e => !e)} className="w-full flex items-center gap-4 px-5 py-4 hover:bg-gray-50 transition-colors text-left relative">
         <div className="w-8 h-8 rounded-lg flex items-center justify-center font-bold text-white text-sm" style={{ background: '#d97706' }}>B</div>
         <div className="flex-1">
-          <p className="font-semibold text-sm" style={{ color: 'var(--text-primary)' }}>Multi-Note Scenes <span className="ml-1 text-xs px-1.5 py-0.5 rounded" style={{ background: '#fef3c7', color: '#92400e' }}>THE NOVELTY</span></p>
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between pb-1 gap-1">
+            <p className="font-semibold text-sm" style={{ color: 'var(--text-primary)' }}>Multi-Note Scenes <span className="ml-1 text-[10px] sm:text-xs px-1.5 py-0.5 rounded" style={{ background: '#fef3c7', color: '#92400e' }}>THE NOVELTY</span></p>
+            {expanded && <DriveUploadLink activeMember={activeMember} />}
+          </div>
           <p className="text-xs" style={{ color: 'var(--text-muted)' }}>Target: 8,000 · Collected: <span className="font-mono font-semibold">{total.toLocaleString()}</span></p>
         </div>
         {expanded ? <ChevronDown size={16} style={{ color: 'var(--text-muted)' }} /> : <ChevronRight size={16} style={{ color: 'var(--text-muted)' }} />}
@@ -755,7 +775,7 @@ function CategoryBSection({ computed, targets, team, onLog, currentUser, dispatc
 }
 
 // ── Category C Section ────────────────────────────────────────────────────
-function CategoryCSection({ computed, targets, team, onLog, currentUser, dispatch }) {
+function CategoryCSection({ computed, targets, team, onLog, currentUser, dispatch, activeMember }) {
   const [openTask, setOpenTask] = useState(null);
   const [expanded, setExpanded] = useState(true);
   const { collectedByCSubtask } = computed;
@@ -799,10 +819,13 @@ function CategoryCSection({ computed, targets, team, onLog, currentUser, dispatc
 
   return (
     <div className="rounded-xl overflow-hidden" style={{ border: '1px solid var(--border)', background: '#fff' }}>
-      <button onClick={() => setExpanded(e => !e)} className="w-full flex items-center gap-4 px-5 py-4 hover:bg-gray-50 transition-colors text-left">
+      <button onClick={() => setExpanded(e => !e)} className="w-full flex items-center gap-4 px-5 py-4 hover:bg-gray-50 transition-colors text-left relative">
         <div className="w-8 h-8 rounded-lg flex items-center justify-center font-bold text-white text-sm" style={{ background: '#7c3aed' }}>C</div>
         <div className="flex-1">
-          <p className="font-semibold text-sm" style={{ color: 'var(--text-primary)' }}>Occlusion Images</p>
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between pb-1 gap-1">
+            <p className="font-semibold text-sm" style={{ color: 'var(--text-primary)' }}>Occlusion Images</p>
+            {expanded && <DriveUploadLink activeMember={activeMember} />}
+          </div>
           <p className="text-xs" style={{ color: 'var(--text-muted)' }}>Target: 4,000 · Collected: <span className="font-mono font-semibold">{total.toLocaleString()}</span></p>
         </div>
         {expanded ? <ChevronDown size={16} style={{ color: 'var(--text-muted)' }} /> : <ChevronRight size={16} style={{ color: 'var(--text-muted)' }} />}
@@ -856,7 +879,7 @@ function CategoryCSection({ computed, targets, team, onLog, currentUser, dispatc
 }
 
 // ── Category D Section (Matrix) ───────────────────────────────────────────
-function CategoryDSection({ computed, targets, team, onLog }) {
+function CategoryDSection({ computed, targets, team, onLog, activeMember }) {
   const [openCell, setOpenCell] = useState(null);
   const [expanded, setExpanded] = useState(true);
   const { collectedByDCell } = computed;
@@ -872,10 +895,13 @@ function CategoryDSection({ computed, targets, team, onLog }) {
 
   return (
     <div className="rounded-xl overflow-hidden" style={{ border: '1px solid var(--border)', background: '#fff' }}>
-      <button onClick={() => setExpanded(e => !e)} className="w-full flex items-center gap-4 px-5 py-4 hover:bg-gray-50 transition-colors text-left">
+      <button onClick={() => setExpanded(e => !e)} className="w-full flex items-center gap-4 px-5 py-4 hover:bg-gray-50 transition-colors text-left relative">
         <div className="w-8 h-8 rounded-lg flex items-center justify-center font-bold text-white text-sm" style={{ background: '#0891b2' }}>D</div>
         <div className="flex-1">
-          <p className="font-semibold text-sm" style={{ color: 'var(--text-primary)' }}>Lighting & Environment Matrix</p>
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between pb-1 gap-1">
+            <p className="font-semibold text-sm" style={{ color: 'var(--text-primary)' }}>Lighting & Environment Matrix</p>
+            {expanded && <DriveUploadLink activeMember={activeMember} />}
+          </div>
           <p className="text-xs" style={{ color: 'var(--text-muted)' }}>Target: 4,000 (35 cells × 40) · Collected: <span className="font-mono font-semibold">{total.toLocaleString()}</span></p>
         </div>
         {expanded ? <ChevronDown size={16} style={{ color: 'var(--text-muted)' }} /> : <ChevronRight size={16} style={{ color: 'var(--text-muted)' }} />}
@@ -935,6 +961,7 @@ export default function CollectionTasks({ state, computed, currentUser, onLog, d
   const [selectedMember, setSelectedMember] = useState('all');
   const isLead = currentUser?.role === 'lead';
   const team = isLead ? state.team : [currentUser];
+  const activeMember = selectedMember === 'all' ? currentUser : team.find(m => m.id === selectedMember);
 
   return (
     <div className="p-4 md:p-6 flex flex-col gap-4">
@@ -958,10 +985,10 @@ export default function CollectionTasks({ state, computed, currentUser, onLog, d
       )}
 
       {/* Category sections */}
-      <CategoryASection computed={computed} targets={state.targets} team={team} onLog={onLog} />
-      <CategoryBSection computed={computed} targets={state.targets} team={team} onLog={onLog} currentUser={currentUser} dispatch={dispatch} />
-      <CategoryCSection computed={computed} targets={state.targets} team={team} onLog={onLog} currentUser={currentUser} dispatch={dispatch} />
-      <CategoryDSection computed={computed} targets={state.targets} team={team} onLog={onLog} />
+      <CategoryASection computed={computed} targets={state.targets} team={team} onLog={onLog} activeMember={activeMember} />
+      <CategoryBSection computed={computed} targets={state.targets} team={team} onLog={onLog} currentUser={currentUser} dispatch={dispatch} activeMember={activeMember} />
+      <CategoryCSection computed={computed} targets={state.targets} team={team} onLog={onLog} currentUser={currentUser} dispatch={dispatch} activeMember={activeMember} />
+      <CategoryDSection computed={computed} targets={state.targets} team={team} onLog={onLog} activeMember={activeMember} />
     </div>
   );
 }

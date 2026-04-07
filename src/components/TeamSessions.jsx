@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Users, Plus, Trash2, Clock, Edit2 } from 'lucide-react';
+import { Users, Plus, Trash2, Clock, Edit2, ExternalLink, AlertTriangle } from 'lucide-react';
 import { Modal, Badge, EmptyState, Btn, ConfirmModal } from './ui/index.jsx';
 import { AVATAR_COLORS } from '../data/seedData.js';
 
@@ -124,6 +124,77 @@ function EditSessionModal({ session, onSubmit, onClose }) {
   );
 }
 
+function DriveCard({ member, isMain, onSave }) {
+  const isEditingInitial = isMain ? !member?.meta?.mainDriveLink : !member?.driveLink;
+  const initialUrl = isMain ? member?.meta?.mainDriveLink || '' : member?.driveLink || '';
+  const updatedAt = isMain ? member?.meta?.mainDriveLinkUpdated : member?.driveLinkUpdated;
+  
+  const [isEditing, setIsEditing] = useState(isEditingInitial);
+  const [url, setUrl] = useState(initialUrl);
+  
+  const isGoogleDrive = url && url.includes('drive.google.com');
+
+  function handleSave() {
+    onSave(url.trim());
+    setIsEditing(false);
+  }
+
+  const initials = isMain ? '★' : member.initials;
+  const color = isMain ? '#2563eb' : member.color;
+  const name = isMain ? 'Main Dataset Folder (Team Lead)' : member.name;
+  const roleLabel = isMain ? 'Central Storage' : (ROLE_LABELS[member.role] || member.role);
+
+  return (
+    <div className="rounded-xl p-4 shadow-sm flex flex-col gap-3 transition-colors" 
+      style={{ background: '#fff', border: '1px solid var(--border)', borderLeft: '3px solid #2563eb' }}>
+      
+      <div className="flex items-center gap-3">
+        <div className="w-10 h-10 rounded-full flex items-center justify-center font-bold text-white text-sm flex-shrink-0" style={{ background: color }}>{initials}</div>
+        <div className="flex-1">
+          <div className="flex items-center gap-2">
+            <p className="font-bold text-sm" style={{ color: 'var(--text-primary)' }}>{name}</p>
+            {isMain && <Badge variant="primary" style={{ background: '#dbeafe', color: '#1e40af' }}>★ Main</Badge>}
+          </div>
+          <p className="text-xs mt-0.5" style={{ color: 'var(--text-muted)' }}>{roleLabel}</p>
+        </div>
+      </div>
+
+      {isEditing ? (
+        <div className="flex flex-col gap-2 mt-1">
+          <p className="text-xs font-semibold uppercase" style={{ color: 'var(--text-muted)' }}>Drive folder URL</p>
+          <div className="flex items-center gap-2">
+            <input type="url" value={url} onChange={e => setUrl(e.target.value)} 
+              className="flex-1 border rounded-lg px-3 py-2 text-sm focus:outline-none"
+              style={{ borderColor: 'var(--border)' }} placeholder="Paste Google Drive folder link here..." />
+            <Btn variant="primary" size="sm" onClick={handleSave} disabled={!url.trim()}>Save</Btn>
+            {initialUrl && <Btn variant="ghost" size="sm" onClick={() => { setUrl(initialUrl); setIsEditing(false); }}>Cancel</Btn>}
+          </div>
+          {url && !isGoogleDrive && (
+             <p className="text-xs flex items-center gap-1 mt-1" style={{ color: '#d97706' }}>
+               <AlertTriangle size={12} /> ⚠ This doesn't look like a Drive link
+             </p>
+          )}
+        </div>
+      ) : (
+        <div className="flex flex-wrap items-center justify-between gap-3 mt-1 pt-3 border-t" style={{ borderColor: 'var(--border)' }}>
+           <a href={url} target="_blank" rel="noopener noreferrer" 
+              className="inline-flex items-center justify-center gap-2 px-3 py-1.5 rounded-lg text-sm font-medium transition-colors border"
+              style={{ borderColor: '#2563eb', color: '#2563eb', background: '#eff6ff' }}>
+              <ExternalLink size={14} /> Open Drive Folder ↗
+           </a>
+           <div className="flex flex-col items-end">
+             <button onClick={() => setIsEditing(true)}
+                className="text-xs flex items-center gap-1 hover:underline px-2 py-1 rounded" style={{ color: 'var(--text-muted)' }}>
+                <Edit2 size={12} /> Edit Link
+             </button>
+             {updatedAt && <p className="text-xs" style={{ color: 'var(--text-muted)', fontSize: '10px' }}>Updated {new Date(updatedAt).toLocaleDateString()}</p>}
+           </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
 export default function TeamSessions({ state, computed, dispatch }) {
   const [showAdd, setShowAdd] = useState(false);
   const [confirmDelete, setConfirmDelete] = useState(null);
@@ -223,6 +294,30 @@ export default function TeamSessions({ state, computed, dispatch }) {
           })}
         </div>
       )}
+
+      {/* Google Drive Folders */}
+      <div className="flex flex-col gap-3 mt-2 mb-2">
+        <div className="flex items-center gap-2 mb-1">
+          <ExternalLink size={18} style={{ color: 'var(--text-primary)' }} />
+          <p className="font-bold text-lg" style={{ color: 'var(--text-primary)' }}>Google Drive Folders</p>
+        </div>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          {team.map(m => (
+            <DriveCard 
+              key={m.id} 
+              member={m} 
+              onSave={(link) => dispatch({ type: 'UPDATE_TEAM_MEMBER_LINK', payload: { id: m.id, driveLink: link } })}
+            />
+          ))}
+        </div>
+        <div className="mt-1 w-full lg:w-1/3 md:w-1/2">
+          <DriveCard 
+            isMain={true} 
+            member={{ meta: state.meta }} 
+            onSave={(link) => dispatch({ type: 'UPDATE_MAIN_DRIVE_LINK', payload: { driveLink: link } })}
+          />
+        </div>
+      </div>
 
       {/* Session Log */}
       <div className="rounded-xl overflow-hidden shadow-sm" style={{ border: '1px solid var(--border)', background: '#fff' }}>

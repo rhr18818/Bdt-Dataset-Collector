@@ -159,6 +159,24 @@ export function reducer(state, action) {
       break;
     }
 
+    case 'UPDATE_TEAM_MEMBER_LINK': {
+      const { id, driveLink } = action.payload;
+      next = {
+        ...state,
+        team: state.team.map(m => m.id === id ? { ...m, driveLink, driveLinkUpdated: new Date().toISOString() } : m)
+      };
+      break;
+    }
+
+    case 'UPDATE_MAIN_DRIVE_LINK': {
+      const { driveLink } = action.payload;
+      next = {
+        ...state,
+        meta: { ...state.meta, mainDriveLink: driveLink, mainDriveLinkUpdated: new Date().toISOString() }
+      };
+      break;
+    }
+
     case 'SET_DEADLINE': {
       next = { ...state, meta: { ...state.meta, deadline: action.payload.deadline } };
       break;

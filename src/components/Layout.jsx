@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import {
   LayoutDashboard, Camera, Tag, ShieldCheck, Users, Download,
-  Settings, Menu, X, ChevronRight, LogOut
+  Settings, Menu, X, ChevronRight, LogOut, UploadCloud, ExternalLink
 } from 'lucide-react';
 
 const MAIN_NAV = [
@@ -58,7 +58,7 @@ export default function Layout({ activeView, setActiveView, totalCollected, onAd
         <nav className="flex-1 py-3 flex flex-col gap-0.5 overflow-y-auto px-2">
           {MAIN_NAV.map(({ id, label, icon: Icon }) => {
             const active = activeView === id;
-            return (
+            const btn = (
               <button key={id} onClick={() => { setActiveView(id); setMobileMenuOpen(false); }}
                 className={`flex items-center gap-3 rounded-lg px-2 py-2.5 w-full text-left transition-all ${active ? 'font-semibold' : 'hover:bg-white/5'}`}
                 style={{
@@ -70,6 +70,34 @@ export default function Layout({ activeView, setActiveView, totalCollected, onAd
                 {sidebarOpen && <span className="text-sm whitespace-nowrap" style={{ fontFamily: 'Inter, sans-serif' }}>{label}</span>}
               </button>
             );
+
+            if (id === 'collection') {
+              return (
+                <div key={`${id}-wrapper`} className="flex flex-col gap-0.5">
+                  {btn}
+                  <a href={currentUser?.driveLink || "#"} 
+                    target="_blank" rel="noopener noreferrer"
+                    onClick={(e) => {
+                      if (!currentUser?.driveLink) e.preventDefault();
+                      setMobileMenuOpen(false);
+                    }}
+                    className="flex items-center gap-3 rounded-lg px-2 py-2.5 w-full text-left transition-all hover:bg-white/5"
+                    style={{
+                      color: currentUser?.driveLink ? '#0ea5e9' : 'gray',
+                      opacity: currentUser?.driveLink ? 1 : 0.6,
+                      borderLeft: '3px solid transparent'
+                    }}>
+                    <UploadCloud size={17} className={currentUser?.driveLink ? "text-cyan-500" : ""} />
+                    {sidebarOpen && (
+                      <span className="text-sm whitespace-nowrap flex items-center gap-1" style={{ fontFamily: 'Inter, sans-serif' }}>
+                        Upload to Drive {currentUser?.driveLink && <ExternalLink size={12} className="opacity-70" />}
+                      </span>
+                    )}
+                  </a>
+                </div>
+              );
+            }
+            return btn;
           })}
           
           {isLead && (
@@ -168,13 +196,32 @@ export default function Layout({ activeView, setActiveView, totalCollected, onAd
         style={{ background: 'var(--bg-primary)', borderColor: '#1e2333' }}>
         {[...MAIN_NAV, ...(isLead ? ADMIN_NAV : [])].slice(0, 5).map(({ id, icon: Icon }) => {
           const active = activeView === id;
-          return (
+          const btn = (
             <button key={id} onClick={() => setActiveView(id)}
               className="flex flex-col items-center gap-0.5 p-2 rounded-lg transition-all"
               style={{ color: active ? 'var(--accent)' : 'var(--sidebar-text)' }}>
               <Icon size={20} />
             </button>
           );
+
+          if (id === 'collection') {
+            return [
+              btn,
+              <a key={`${id}-mobile-drive`} href={currentUser?.driveLink || "#"}
+                target="_blank" rel="noopener noreferrer"
+                onClick={(e) => {
+                  if (!currentUser?.driveLink) e.preventDefault();
+                }}
+                className="flex flex-col items-center gap-0.5 p-2 rounded-lg transition-all"
+                style={{
+                  color: currentUser?.driveLink ? '#0ea5e9' : 'gray',
+                  opacity: currentUser?.driveLink ? 1 : 0.6
+                }}>
+                <UploadCloud size={20} className={currentUser?.driveLink ? "text-cyan-500" : ""} />
+              </a>
+            ];
+          }
+          return btn;
         })}
         {isLead && ADMIN_NAV.length + MAIN_NAV.length <= 5 && (
           <button onClick={() => setActiveView('settings')} className="flex flex-col items-center gap-0.5 p-2 rounded-lg transition-all"
