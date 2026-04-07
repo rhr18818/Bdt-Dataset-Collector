@@ -490,7 +490,7 @@ function CategoryASection({ computed, targets, team, onLog }) {
 }
 
 // ── Category B Section ────────────────────────────────────────────────────
-function CategoryBSection({ computed, targets, team, onLog }) {
+function CategoryBSection({ computed, targets, team, onLog, currentUser, dispatch }) {
   const [openCombo, setOpenCombo] = useState(null);
   const [showRandom, setShowRandom] = useState(false);
   const [expanded, setExpanded] = useState(true);
@@ -499,6 +499,34 @@ function CategoryBSection({ computed, targets, team, onLog }) {
   const [toast, setToast] = useState(null);
   const [prevCollected, setPrevCollected] = useState(computed.collectedByCombination);
   const [animatingKeys, setAnimatingKeys] = useState({});
+
+  const isAdmin = currentUser?.accessId === 'admin' || currentUser?.role === 'lead';
+
+  const handleTargetEdit = (combo) => {
+    if (!isAdmin) return;
+    const currentTgt = targets.B_combinations?.[combo.key] || combo.target;
+    // Format combination string like "100+50" nicely
+    const comboStr = combo.denoms.join('+');
+    const val = window.prompt(`Edit target amount for [${comboStr}]:`, currentTgt);
+    
+    if (val !== null) {
+      const parsed = parseInt(val, 10);
+      if (!isNaN(parsed) && parsed > 0) {
+        dispatch({
+          type: 'SET_TARGET',
+          payload: {
+            key: 'B_combinations',
+            value: {
+              ...(targets.B_combinations || {}),
+              [combo.key]: parsed
+            }
+          }
+        });
+      } else {
+        alert("Please enter a valid positive number.");
+      }
+    }
+  };
 
   const { collectedByCombination, bRandomCollected } = computed;
   const total = computed.collectedByCategory.B;
@@ -584,7 +612,19 @@ function CategoryBSection({ computed, targets, team, onLog }) {
                   {combo.denoms.map(d => `৳${d}`).join('+')}
                 </td>
                 <td className="px-3 py-2 font-mono font-bold" style={{ color: 'var(--accent-warm)' }}>৳{combo.sum}</td>
-                <td className="px-3 py-2 font-mono" style={{ color: 'var(--text-muted)' }}>{tgt}</td>
+                <td className="px-3 py-2 font-mono group" style={{ color: 'var(--text-muted)' }}>
+                  {isAdmin ? (
+                    <button
+                      onClick={() => handleTargetEdit(combo)}
+                      className="flex items-center gap-1 hover:text-blue-600 transition-colors"
+                      title="Edit Target"
+                    >
+                      {tgt} <span className="opacity-0 group-hover:opacity-100 text-[10px]">✎</span>
+                    </button>
+                  ) : (
+                    tgt
+                  )}
+                </td>
                 <td className="px-3 py-2 font-mono font-semibold" style={{ color: 'var(--text-primary)' }}>{cnt}</td>
                 <td className="px-3 py-2">
                   {done ? (
@@ -840,7 +880,7 @@ function CategoryDSection({ computed, targets, team, onLog }) {
 }
 
 // ── Main CollectionTasks View ─────────────────────────────────────────────
-export default function CollectionTasks({ state, computed, currentUser, onLog }) {
+export default function CollectionTasks({ state, computed, currentUser, onLog, dispatch }) {
   const [selectedMember, setSelectedMember] = useState('all');
   const isLead = currentUser?.role === 'lead';
   const team = isLead ? state.team : [currentUser];
@@ -868,7 +908,7 @@ export default function CollectionTasks({ state, computed, currentUser, onLog })
 
       {/* Category sections */}
       <CategoryASection computed={computed} targets={state.targets} team={team} onLog={onLog} />
-      <CategoryBSection computed={computed} targets={state.targets} team={team} onLog={onLog} />
+      <CategoryBSection computed={computed} targets={state.targets} team={team} onLog={onLog} currentUser={currentUser} dispatch={dispatch} />
       <CategoryCSection computed={computed} targets={state.targets} team={team} onLog={onLog} />
       <CategoryDSection computed={computed} targets={state.targets} team={team} onLog={onLog} />
     </div>
