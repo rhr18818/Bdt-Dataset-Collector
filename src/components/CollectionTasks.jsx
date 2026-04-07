@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Camera, ChevronDown, ChevronRight, CheckCircle, Plus } from 'lucide-react';
+import { Camera, ChevronDown, ChevronRight, CheckCircle, Plus, Fingerprint, Layers, FileSymlink, Maximize } from 'lucide-react';
 import { Modal, ProgressBar, Badge, EmptyState, Btn, RingProgress } from './ui/index.jsx';
 import {
   DENOMINATIONS, CONDITIONS, ENVIRONMENTS, LIGHTING, ARRANGEMENTS, BG_TYPES,
@@ -755,11 +755,47 @@ function CategoryBSection({ computed, targets, team, onLog, currentUser, dispatc
 }
 
 // ── Category C Section ────────────────────────────────────────────────────
-function CategoryCSection({ computed, targets, team, onLog }) {
+function CategoryCSection({ computed, targets, team, onLog, currentUser, dispatch }) {
   const [openTask, setOpenTask] = useState(null);
   const [expanded, setExpanded] = useState(true);
   const { collectedByCSubtask } = computed;
   const total = computed.collectedByCategory.C;
+
+  const isAdmin = currentUser?.accessId === 'admin' || currentUser?.role === 'lead';
+
+  const handleTargetEdit = (task) => {
+    if (!isAdmin) return;
+    const currentTgt = targets.C_subtasks?.[task.key] || task.target;
+    const val = window.prompt(`Edit target amount for [${task.label}]:`, currentTgt);
+    
+    if (val !== null) {
+      const parsed = parseInt(val, 10);
+      if (!isNaN(parsed) && parsed > 0) {
+        dispatch({
+          type: 'SET_TARGET',
+          payload: {
+            key: 'C_subtasks',
+            value: {
+              ...(targets.C_subtasks || {}),
+              [task.key]: parsed
+            }
+          }
+        });
+      } else {
+        alert("Please enter a valid positive number.");
+      }
+    }
+  };
+
+  const getTaskIcon = (key) => {
+    switch (key) {
+      case 'note-overlap': return <Layers size={20} strokeWidth={1.5} style={{ color: '#4b5563' }} />;
+      case 'fingers': return <Fingerprint size={20} strokeWidth={1.5} style={{ color: '#eab308' }} />;
+      case 'folded': return <FileSymlink size={20} strokeWidth={1.5} style={{ color: '#3b82f6' }} />;
+      case 'frame-edge': return <Maximize size={20} strokeWidth={1.5} style={{ color: '#14b8a6' }} />;
+      default: return <span>{task.icon}</span>;
+    }
+  };
 
   return (
     <div className="rounded-xl overflow-hidden" style={{ border: '1px solid var(--border)', background: '#fff' }}>
@@ -781,10 +817,25 @@ function CategoryCSection({ computed, targets, team, onLog }) {
               <div key={task.key} className="rounded-xl p-4" style={{ border: '1px solid var(--border)' }}>
                 <div className="flex items-center justify-between mb-2">
                   <div className="flex items-center gap-2">
-                    <span style={{ fontSize: 20 }}>{task.icon}</span>
+                    <div className="flex items-center justify-center w-8 h-8 rounded-full bg-gray-50 border">
+                      {getTaskIcon(task.key)}
+                    </div>
                     <div>
                       <p className="text-sm font-semibold" style={{ color: 'var(--text-primary)' }}>{task.label}</p>
-                      <p className="text-xs font-mono" style={{ color: 'var(--text-muted)' }}>{cnt} / {tgt}</p>
+                      <div className="flex items-center text-xs font-mono group" style={{ color: 'var(--text-muted)' }}>
+                        {cnt} / 
+                        {isAdmin ? (
+                          <button
+                            onClick={() => handleTargetEdit(task)}
+                            className="ml-1 inline-flex items-center gap-1 hover:text-blue-600 transition-colors"
+                            title="Edit Target"
+                          >
+                            {tgt} <span className="opacity-0 group-hover:opacity-100 text-[10px]">✎</span>
+                          </button>
+                        ) : (
+                          <span className="ml-1">{tgt}</span>
+                        )}
+                      </div>
                     </div>
                   </div>
                   <Btn variant="primary" size="sm" onClick={() => setOpenTask(task)}>Log</Btn>
@@ -909,7 +960,7 @@ export default function CollectionTasks({ state, computed, currentUser, onLog, d
       {/* Category sections */}
       <CategoryASection computed={computed} targets={state.targets} team={team} onLog={onLog} />
       <CategoryBSection computed={computed} targets={state.targets} team={team} onLog={onLog} currentUser={currentUser} dispatch={dispatch} />
-      <CategoryCSection computed={computed} targets={state.targets} team={team} onLog={onLog} />
+      <CategoryCSection computed={computed} targets={state.targets} team={team} onLog={onLog} currentUser={currentUser} dispatch={dispatch} />
       <CategoryDSection computed={computed} targets={state.targets} team={team} onLog={onLog} />
     </div>
   );
