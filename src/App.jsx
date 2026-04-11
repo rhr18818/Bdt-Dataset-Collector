@@ -124,6 +124,7 @@ export default function App() {
         activeView={activeView}
         setActiveView={handleSetView}
         totalCollected={computed.totalCollected}
+        targets={state.targets}
         onAddImages={handleAddImages}
         currentUser={currentUser}
         onLogout={handleLogout}>

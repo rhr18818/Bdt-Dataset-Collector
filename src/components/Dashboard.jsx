@@ -5,7 +5,6 @@ import { StatCard, ProgressBar, Badge, EmptyState } from './ui/index.jsx';
 import { CATEGORY_LABELS, CATEGORY_DESCRIPTIONS } from '../data/seedData.js';
 
 const CATEGORY_COLORS = { A: '#2563eb', B: '#d97706', C: '#7c3aed', D: '#0891b2' };
-const CATEGORY_TARGETS = { A: 10000, B: 8000, C: 4000, D: 4000 };
 
 function getStatusBadge(collected, target) {
   const pct = target > 0 ? collected / target : 0;
@@ -16,7 +15,7 @@ function getStatusBadge(collected, target) {
 
 function CategoryRow({ cat, collected, targets, sessions }) {
   const [expanded, setExpanded] = useState(false);
-  const target = CATEGORY_TARGETS[cat];
+  const target = targets[cat] || 0;
   const pct = target > 0 ? Math.round((collected / target) * 100) : 0;
 
   // Build subcategory breakdown from sessions
@@ -83,13 +82,16 @@ export default function Dashboard({ state, computed }) {
   const catChartData = ['A', 'B', 'C', 'D'].map(cat => ({
     name: cat,
     collected: collectedByCategory[cat],
-    remaining: Math.max(0, CATEGORY_TARGETS[cat] - collectedByCategory[cat]),
-    target: CATEGORY_TARGETS[cat],
+    remaining: Math.max(0, state.targets[cat] - collectedByCategory[cat]),
+    target: state.targets[cat],
   }));
 
   // Find member by id
   const memberById = {};
   for (const m of team) memberById[m.id] = m;
+
+  // Total Target 
+  const totalTarget = (state.targets.A || 0) + (state.targets.B || 0) + (state.targets.C || 0) + (state.targets.D || 0);
 
   // Auto-refresh every 30 seconds
   const [tick, setTick] = useState(0);
@@ -105,10 +107,10 @@ export default function Dashboard({ state, computed }) {
         <StatCard
           label="Total Collected"
           value={totalCollected.toLocaleString()}
-          sub={`of 26,000 target images`}
+          sub={`of ${totalTarget.toLocaleString()} target images`}
           icon={Target}
           accentColor="var(--accent)"
-          progress={{ value: totalCollected, max: 26000 }}
+          progress={{ value: totalCollected, max: totalTarget }}
           progressColor="var(--accent)"
         />
         <StatCard

@@ -16,11 +16,12 @@ const ADMIN_NAV = [
   { id: 'export', label: 'Export & Report', icon: Download },
 ];
 
-export default function Layout({ activeView, setActiveView, totalCollected, onAddImages, currentUser, onLogout, children }) {
+export default function Layout({ activeView, setActiveView, totalCollected, targets, onAddImages, currentUser, onLogout, children }) {
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const today = new Date().toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' });
-  const pct = Math.round((totalCollected / 26000) * 100);
+  const totalTarget = targets ? (targets.A || 0) + (targets.B || 0) + (targets.C || 0) + (targets.D || 0) : 26000;
+  const pct = totalTarget > 0 ? Math.round((totalCollected / totalTarget) * 100) : 0;
   const isLead = currentUser?.role === 'lead';
 
   return (
@@ -173,7 +174,7 @@ export default function Layout({ activeView, setActiveView, totalCollected, onAd
           </div>
           {/* Progress pill */}
           <div className="hidden sm:flex items-center gap-2 px-3 py-1.5 rounded-full" style={{ background: '#f0f4ff', border: '1px solid #c7d7fe' }}>
-            <span className="text-xs font-semibold font-mono" style={{ color: 'var(--accent)' }}>{totalCollected.toLocaleString()} / 26,000</span>
+            <span className="text-xs font-semibold font-mono" style={{ color: 'var(--accent)' }}>{totalCollected.toLocaleString()} / {totalTarget.toLocaleString()}</span>
             <span className="text-xs" style={{ color: 'var(--text-muted)' }}>({pct}%)</span>
           </div>
           <button onClick={onAddImages}

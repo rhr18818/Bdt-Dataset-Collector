@@ -483,7 +483,7 @@ function CategoryASection({ computed, targets, team, onLog, activeMember }) {
           <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-7 gap-3">
             {DENOMINATIONS.map(d => {
               const cnt = collectedByADenom[d] || 0;
-              const tgt = targets.A_denominations?.[d] || Math.round(10000/7);
+              const tgt = targets.A_denominations?.[d] || Math.round(targets.A/7);
               const pct = Math.round(cnt / tgt * 100);
               return (
                 <div key={d} className="rounded-xl p-3 flex flex-col items-center gap-2 cursor-pointer hover:shadow-md transition-shadow"
@@ -681,7 +681,7 @@ function CategoryBSection({ computed, targets, team, onLog, currentUser, dispatc
             <p className="font-semibold text-sm" style={{ color: 'var(--text-primary)' }}>Multi-Note Scenes <span className="ml-1 text-[10px] sm:text-xs px-1.5 py-0.5 rounded" style={{ background: '#fef3c7', color: '#92400e' }}>THE NOVELTY</span></p>
             {expanded && <DriveUploadLink activeMember={activeMember} />}
           </div>
-          <p className="text-xs" style={{ color: 'var(--text-muted)' }}>Target: 8,000 · Collected: <span className="font-mono font-semibold">{total.toLocaleString()}</span></p>
+          <p className="text-xs" style={{ color: 'var(--text-muted)' }}>Target: {targets.B.toLocaleString()} · Collected: <span className="font-mono font-semibold">{total.toLocaleString()}</span></p>
         </div>
         {expanded ? <ChevronDown size={16} style={{ color: 'var(--text-muted)' }} /> : <ChevronRight size={16} style={{ color: 'var(--text-muted)' }} />}
       </button>
@@ -826,7 +826,7 @@ function CategoryCSection({ computed, targets, team, onLog, currentUser, dispatc
             <p className="font-semibold text-sm" style={{ color: 'var(--text-primary)' }}>Occlusion Images</p>
             {expanded && <DriveUploadLink activeMember={activeMember} />}
           </div>
-          <p className="text-xs" style={{ color: 'var(--text-muted)' }}>Target: 4,000 · Collected: <span className="font-mono font-semibold">{total.toLocaleString()}</span></p>
+          <p className="text-xs" style={{ color: 'var(--text-muted)' }}>Target: {targets.C.toLocaleString()} · Collected: <span className="font-mono font-semibold">{total.toLocaleString()}</span></p>
         </div>
         {expanded ? <ChevronDown size={16} style={{ color: 'var(--text-muted)' }} /> : <ChevronRight size={16} style={{ color: 'var(--text-muted)' }} />}
       </button>
@@ -902,7 +902,7 @@ function CategoryDSection({ computed, targets, team, onLog, activeMember }) {
             <p className="font-semibold text-sm" style={{ color: 'var(--text-primary)' }}>Lighting & Environment Matrix</p>
             {expanded && <DriveUploadLink activeMember={activeMember} />}
           </div>
-          <p className="text-xs" style={{ color: 'var(--text-muted)' }}>Target: 4,000 (35 cells × 40) · Collected: <span className="font-mono font-semibold">{total.toLocaleString()}</span></p>
+          <p className="text-xs" style={{ color: 'var(--text-muted)' }}>Target: {targets.D.toLocaleString()} (35 cells × {Math.round(targets.D / 35)}) · Collected: <span className="font-mono font-semibold">{total.toLocaleString()}</span></p>
         </div>
         {expanded ? <ChevronDown size={16} style={{ color: 'var(--text-muted)' }} /> : <ChevronRight size={16} style={{ color: 'var(--text-muted)' }} />}
       </button>
