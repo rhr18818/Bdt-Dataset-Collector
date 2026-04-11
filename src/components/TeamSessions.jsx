@@ -72,6 +72,35 @@ function AddMemberModal({ onSubmit, onClose }) {
   );
 }
 
+function EditMemberModal({ member, onSubmit, onClose }) {
+  const [role, setRole] = useState(member.role || 'collector');
+
+  function handleSubmit() {
+    onSubmit(member.id, { role });
+  }
+
+  return (
+    <Modal title="Edit Team Member" onClose={onClose} size="sm">
+      <div className="mb-4">
+        <p className="text-xs font-semibold mb-1 uppercase" style={{ color: 'var(--text-muted)' }}>Role for {member.name}</p>
+        <div className="flex flex-wrap gap-2 mt-2">
+          {ROLES.map(r => (
+            <button key={r} type="button" onClick={() => setRole(r)}
+              className="px-3 py-1.5 rounded-lg text-xs font-medium border transition-all"
+              style={{ background: role === r ? 'var(--accent)' : '#fff', color: role === r ? '#fff' : 'var(--text-muted)', borderColor: role === r ? 'var(--accent)' : 'var(--border)' }}>
+              {ROLE_LABELS[r]}
+            </button>
+          ))}
+        </div>
+      </div>
+      <div className="flex justify-end gap-3 mt-6">
+        <Btn variant="ghost" onClick={onClose}>Cancel</Btn>
+        <Btn variant="primary" onClick={handleSubmit}>Save Changes</Btn>
+      </div>
+    </Modal>
+  );
+}
+
 function EditSessionModal({ session, onSubmit, onClose }) {
   const [category, setCategory] = useState(session.category || 'A');
   const [subcategory, setSubcategory] = useState(session.subcategory || '');
@@ -124,12 +153,12 @@ function EditSessionModal({ session, onSubmit, onClose }) {
   );
 }
 
-function DriveCard({ member, isMain, onSave }) {
+function DriveCard({ member, isMain, onSave, canEdit }) {
   const isEditingInitial = isMain ? !member?.meta?.mainDriveLink : !member?.driveLink;
   const initialUrl = isMain ? member?.meta?.mainDriveLink || '' : member?.driveLink || '';
   const updatedAt = isMain ? member?.meta?.mainDriveLinkUpdated : member?.driveLinkUpdated;
   
-  const [isEditing, setIsEditing] = useState(isEditingInitial);
+  const [isEditing, setIsEditing] = useState(canEdit ? isEditingInitial : false);
   const [url, setUrl] = useState(initialUrl);
   
   const isGoogleDrive = url && url.includes('drive.google.com');
@@ -183,10 +212,12 @@ function DriveCard({ member, isMain, onSave }) {
               <ExternalLink size={14} /> Open Drive Folder ↗
            </a>
            <div className="flex flex-col items-end">
-             <button onClick={() => setIsEditing(true)}
-                className="text-xs flex items-center gap-1 hover:underline px-2 py-1 rounded" style={{ color: 'var(--text-muted)' }}>
-                <Edit2 size={12} /> Edit Link
-             </button>
+             {canEdit && (
+               <button onClick={() => setIsEditing(true)}
+                  className="text-xs flex items-center gap-1 hover:underline px-2 py-1 rounded" style={{ color: 'var(--text-muted)' }}>
+                  <Edit2 size={12} /> Edit Link
+               </button>
+             )}
              {updatedAt && <p className="text-xs" style={{ color: 'var(--text-muted)', fontSize: '10px' }}>Updated {new Date(updatedAt).toLocaleDateString()}</p>}
            </div>
         </div>
@@ -195,8 +226,9 @@ function DriveCard({ member, isMain, onSave }) {
   );
 }
 
-export default function TeamSessions({ state, computed, dispatch }) {
+export default function TeamSessions({ state, computed, dispatch, currentUser }) {
   const [showAdd, setShowAdd] = useState(false);
+  const [editMember, setEditMember] = useState(null);
   const [confirmDelete, setConfirmDelete] = useState(null);
   const [sessionToDelete, setSessionToDelete] = useState(null);
   const [sessionToEdit, setSessionToEdit] = useState(null);
@@ -210,6 +242,11 @@ export default function TeamSessions({ state, computed, dispatch }) {
   function handleAdd(payload) {
     dispatch({ type: 'ADD_TEAM_MEMBER', payload });
     setShowAdd(false);
+  }
+
+  function handleEditMember(id, updates) {
+    dispatch({ type: 'UPDATE_TEAM_MEMBER', payload: { id, updates } });
+    setEditMember(null);
   }
 
   function handleDelete(id) {
@@ -261,14 +298,23 @@ export default function TeamSessions({ state, computed, dispatch }) {
             const stats = memberStats[m.id] || {};
             return (
               <div key={m.id} className="rounded-xl p-5 shadow-sm flex flex-col gap-3 relative" style={{ background: '#fff', border: '1px solid var(--border)' }}>
-                <button onClick={() => setConfirmDelete(m)} className="absolute top-3 right-3 rounded-lg p-1.5 hover:bg-red-50 transition-colors">
-                  <Trash2 size={14} style={{ color: '#d1d5db' }} className="hover:text-red-500" />
-                </button>
+                {currentUser?.accessId === 'admin' && (
+                  <button onClick={() => setConfirmDelete(m)} className="absolute top-3 right-3 rounded-lg p-1.5 hover:bg-red-50 transition-colors" title="Remove Member">
+                    <Trash2 size={14} style={{ color: '#d1d5db' }} className="hover:text-red-500" />
+                  </button>
+                )}
                 <div className="flex items-center gap-3">
                   <div className="w-11 h-11 rounded-full flex items-center justify-center font-bold text-white text-base flex-shrink-0" style={{ background: m.color }}>{m.initials}</div>
                   <div>
                     <p className="font-bold text-sm" style={{ color: 'var(--text-primary)' }}>{m.name}</p>
-                    <Badge variant="default">{ROLE_LABELS[m.role] || m.role}</Badge>
+                    <div className="flex items-center gap-2">
+                       <Badge variant="default">{ROLE_LABELS[m.role] || m.role}</Badge>
+                       {currentUser?.accessId === 'admin' && (
+                         <button onClick={() => setEditMember(m)} className="text-gray-400 hover:text-blue-500 transition-colors" title="Edit Role">
+                           <Edit2 size={12} />
+                         </button>
+                       )}
+                    </div>
                   </div>
                 </div>
                 <div className="grid grid-cols-2 gap-2 text-xs">
@@ -306,6 +352,7 @@ export default function TeamSessions({ state, computed, dispatch }) {
             <DriveCard 
               key={m.id} 
               member={m} 
+              canEdit={currentUser?.accessId === 'admin'}
               onSave={(link) => dispatch({ type: 'UPDATE_TEAM_MEMBER_LINK', payload: { id: m.id, driveLink: link } })}
             />
           ))}
@@ -314,6 +361,7 @@ export default function TeamSessions({ state, computed, dispatch }) {
           <DriveCard 
             isMain={true} 
             member={{ meta: state.meta }} 
+            canEdit={currentUser?.accessId === 'admin'}
             onSave={(link) => dispatch({ type: 'UPDATE_MAIN_DRIVE_LINK', payload: { driveLink: link } })}
           />
         </div>
@@ -377,6 +425,7 @@ export default function TeamSessions({ state, computed, dispatch }) {
       </div>
 
       {showAdd && <AddMemberModal onSubmit={handleAdd} onClose={() => setShowAdd(false)} />}
+      {editMember && <EditMemberModal member={editMember} onSubmit={handleEditMember} onClose={() => setEditMember(null)} />}
       {confirmDelete && (
         <ConfirmModal title="Remove Team Member" danger
           message={`Remove "${confirmDelete.name}" from the team? Their session logs will be preserved.`}

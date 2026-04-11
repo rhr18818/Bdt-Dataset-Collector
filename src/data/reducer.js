@@ -159,6 +159,15 @@ export function reducer(state, action) {
       break;
     }
 
+    case 'UPDATE_TEAM_MEMBER': {
+      const { id, updates } = action.payload;
+      next = {
+        ...state,
+        team: state.team.map(m => m.id === id ? { ...m, ...updates } : m)
+      };
+      break;
+    }
+
     case 'UPDATE_TEAM_MEMBER_LINK': {
       const { id, driveLink } = action.payload;
       next = {
