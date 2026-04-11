@@ -3,15 +3,15 @@ import { Plus, X } from 'lucide-react';
 
 const CATEGORIES = ['A', 'B', 'C', 'D'];
 
-export default function QuickLogFAB({ team, onLog }) {
+export default function QuickLogFAB({ team, currentUser, onLog }) {
   const [open, setOpen] = useState(false);
   const [step, setStep] = useState(1);
   const [category, setCategory] = useState('');
   const [subtask, setSubtask] = useState('');
   const [count, setCount] = useState('');
-  const [memberId, setMemberId] = useState(team[0]?.id || '');
+  const [memberId, setMemberId] = useState(currentUser?.id || team[0]?.id || '');
 
-  function reset() { setStep(1); setCategory(''); setSubtask(''); setCount(''); setMemberId(team[0]?.id || ''); }
+  function reset() { setStep(1); setCategory(''); setSubtask(''); setCount(''); setMemberId(currentUser?.id || team[0]?.id || ''); }
   function close() { setOpen(false); reset(); }
 
   function submit() {

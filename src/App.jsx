@@ -160,7 +160,7 @@ export default function App() {
       </Layout>
 
       {/* Quick Log FAB — visible on all views */}
-      <QuickLogFAB team={isLead ? state.team : [currentUser]} onLog={handleLog} />
+      <QuickLogFAB team={isLead ? state.team : [currentUser]} currentUser={currentUser} onLog={handleLog} />
 
       {/* Settings Panel */}
       {showSettings && <SettingsPanel state={state} dispatch={dispatch} onClose={() => setShowSettings(false)} />}

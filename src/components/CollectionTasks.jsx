@@ -36,14 +36,14 @@ function CheckGroup({ label, options, selected, onChange }) {
 }
 
 // ── Single-Note Logging Modal ─────────────────────────────────────────────
-function SingleNoteModal({ denom, team, onSubmit, onClose }) {
+function SingleNoteModal({ denom, team, activeMember, onSubmit, onClose }) {
   const [step, setStep] = useState(1);
   const [selectedDenom, setSelectedDenom] = useState(denom || null);
   const [conditions, setConditions] = useState([]);
   const [environments, setEnvironments] = useState([]);
   const [lighting, setLighting] = useState([]);
   const [count, setCount] = useState('');
-  const [memberId, setMemberId] = useState(team[0]?.id || '');
+  const [memberId, setMemberId] = useState(activeMember?.id || team[0]?.id || '');
   const [notes, setNotes] = useState('');
 
   const canNext = {
@@ -184,11 +184,11 @@ function SingleNoteModal({ denom, team, onSubmit, onClose }) {
 }
 
 // ── Multi-Note Logging Modal ──────────────────────────────────────────────
-function MultiNoteModal({ combo, team, onSubmit, onClose }) {
+function MultiNoteModal({ combo, team, activeMember, onSubmit, onClose }) {
   const [arrangements, setArrangements] = useState([]);
   const [count, setCount] = useState('');
   const [background, setBackground] = useState('');
-  const [memberId, setMemberId] = useState(team[0]?.id || '');
+  const [memberId, setMemberId] = useState(activeMember?.id || team[0]?.id || '');
   const [notes, setNotes] = useState('');
 
   function handleSubmit() {
@@ -269,10 +269,10 @@ function MultiNoteModal({ combo, team, onSubmit, onClose }) {
 }
 
 // ── Random B Logging Modal ────────────────────────────────────────────────
-function RandomBModal({ team, onSubmit, onClose }) {
+function RandomBModal({ team, activeMember, onSubmit, onClose }) {
   const [denomInput, setDenomInput] = useState('');
   const [count, setCount] = useState('');
-  const [memberId, setMemberId] = useState(team[0]?.id || '');
+  const [memberId, setMemberId] = useState(activeMember?.id || team[0]?.id || '');
   const denomNums = denomInput.split(',').map(s => parseInt(s.trim())).filter(n => !isNaN(n) && DENOMINATIONS.includes(n));
   const sum = denomNums.reduce((a, b) => a + b, 0);
 
@@ -332,9 +332,9 @@ function RandomBModal({ team, onSubmit, onClose }) {
 }
 
 // ── Category C Modal ──────────────────────────────────────────────────────
-function CategoryCModal({ subtask, team, onSubmit, onClose }) {
+function CategoryCModal({ subtask, team, activeMember, onSubmit, onClose }) {
   const [count, setCount] = useState('');
-  const [memberId, setMemberId] = useState(team[0]?.id || '');
+  const [memberId, setMemberId] = useState(activeMember?.id || team[0]?.id || '');
   const [notes, setNotes] = useState('');
 
   function handleSubmit() {
@@ -387,9 +387,9 @@ function CategoryCModal({ subtask, team, onSubmit, onClose }) {
 }
 
 // ── Category D Matrix Modal ───────────────────────────────────────────────
-function CategoryDModal({ env, light, team, onSubmit, onClose }) {
+function CategoryDModal({ env, light, team, activeMember, onSubmit, onClose }) {
   const [count, setCount] = useState('');
-  const [memberId, setMemberId] = useState(team[0]?.id || '');
+  const [memberId, setMemberId] = useState(activeMember?.id || team[0]?.id || '');
 
   function handleSubmit() {
     if (!count || !memberId) return;
@@ -499,7 +499,7 @@ function CategoryASection({ computed, targets, team, onLog, activeMember }) {
         </div>
       )}
       {openModal && (
-        <SingleNoteModal denom={openModal} team={team} onClose={() => setOpenModal(null)}
+        <SingleNoteModal denom={openModal} team={team} activeMember={activeMember} onClose={() => setOpenModal(null)}
           onSubmit={(data) => { onLog(data); setOpenModal(null); }} />
       )}
     </div>
@@ -763,11 +763,11 @@ function CategoryBSection({ computed, targets, team, onLog, currentUser, dispatc
       )}
 
       {openCombo && (
-        <MultiNoteModal combo={openCombo} team={team} onClose={() => setOpenCombo(null)}
+        <MultiNoteModal combo={openCombo} team={team} activeMember={activeMember} onClose={() => setOpenCombo(null)}
           onSubmit={(data) => { onLog(data); setOpenCombo(null); }} />
       )}
       {showRandom && (
-        <RandomBModal team={team} onClose={() => setShowRandom(false)}
+        <RandomBModal team={team} activeMember={activeMember} onClose={() => setShowRandom(false)}
           onSubmit={(data) => { onLog(data); setShowRandom(false); }} />
       )}
     </div>
@@ -871,7 +871,7 @@ function CategoryCSection({ computed, targets, team, onLog, currentUser, dispatc
         </div>
       )}
       {openTask && (
-        <CategoryCModal subtask={openTask} team={team} onClose={() => setOpenTask(null)}
+        <CategoryCModal subtask={openTask} team={team} activeMember={activeMember} onClose={() => setOpenTask(null)}
           onSubmit={(data) => { onLog(data); setOpenTask(null); }} />
       )}
     </div>
@@ -949,7 +949,7 @@ function CategoryDSection({ computed, targets, team, onLog, activeMember }) {
         </div>
       )}
       {openCell && (
-        <CategoryDModal env={openCell.env} light={openCell.light} team={team} onClose={() => setOpenCell(null)}
+        <CategoryDModal env={openCell.env} light={openCell.light} team={team} activeMember={activeMember} onClose={() => setOpenCell(null)}
           onSubmit={(data) => { onLog(data); setOpenCell(null); }} />
       )}
     </div>

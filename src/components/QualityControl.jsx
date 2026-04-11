@@ -9,9 +9,9 @@ const ERROR_TYPES = [
 ];
 const QC_ACTIONS = ['none', 're-annotate batch', 'discuss with annotator'];
 
-function AddQCModal({ team, onSubmit, onClose }) {
-  const [reviewerId, setReviewerId] = useState(team[0]?.id || '');
-  const [annotatorId, setAnnotatorId] = useState(team[0]?.id || '');
+function AddQCModal({ team, currentUser, onSubmit, onClose }) {
+  const [reviewerId, setReviewerId] = useState(currentUser?.id || team[0]?.id || '');
+  const [annotatorId, setAnnotatorId] = useState(currentUser?.id || team[0]?.id || '');
   const [batchSize, setBatchSize] = useState('');
   const [errors, setErrors] = useState('');
   const [errorTypes, setErrorTypes] = useState([]);
@@ -249,7 +249,7 @@ export default function QualityControl({ state, computed, dispatch }) {
         </div>
       </div>
 
-      {showAddModal && <AddQCModal team={team} onSubmit={handleAdd} onClose={() => setShowAddModal(false)} />}
+      {showAddModal && <AddQCModal team={team} currentUser={state.currentUser} onSubmit={handleAdd} onClose={() => setShowAddModal(false)} />}
     </div>
   );
 }
