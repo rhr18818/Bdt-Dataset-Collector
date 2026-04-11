@@ -6,7 +6,7 @@ import { ENVIRONMENTS, LIGHTING } from '../data/seedData.js';
 
 const DENOM_COLORS = { 2: '#64748b', 5: '#f43f5e', 10:'#2563eb', 20:'#16a34a', 50:'#d97706', 100:'#7c3aed', 200:'#0891b2', 500:'#db2777', 1000:'#65a30d' };
 
-export default function ExportReport({ state, computed, dispatch }) {
+export default function ExportReport({ state, computed, dispatch, currentUser }) {
   const [confirmReset, setConfirmReset] = useState(false);
   const [resetInput, setResetInput] = useState('');
   const [copied, setCopied] = useState(false);
@@ -220,18 +220,20 @@ export default function ExportReport({ state, computed, dispatch }) {
       </div>
 
       {/* Danger Zone */}
-      <div className="rounded-xl p-5" style={{ border: '2px solid var(--danger)', background: '#fef2f2' }}>
-        <div className="flex items-start gap-3">
-          <AlertTriangle size={20} style={{ color: 'var(--danger)', flexShrink: 0, marginTop: 2 }} />
-          <div className="flex-1">
-            <p className="font-bold text-sm" style={{ color: 'var(--danger)' }}>Danger Zone</p>
-            <p className="text-xs mt-0.5 mb-3" style={{ color: '#7f1d1d' }}>
-              Resetting all data is irreversible. All sessions, QC checks, and team members will be erased and replaced with seed data.
-            </p>
-            <Btn variant="danger" onClick={() => setConfirmReset(true)}><RotateCcw size={14} /> Reset All Data</Btn>
+      {currentUser?.accessId === 'admin' && (
+        <div className="rounded-xl p-5 mt-4" style={{ border: '2px solid var(--danger)', background: '#fef2f2' }}>
+          <div className="flex items-start gap-3">
+            <AlertTriangle size={20} style={{ color: 'var(--danger)', flexShrink: 0, marginTop: 2 }} />
+            <div className="flex-1">
+              <p className="font-bold text-sm" style={{ color: 'var(--danger)' }}>Danger Zone</p>
+              <p className="text-xs mt-0.5 mb-3" style={{ color: '#7f1d1d' }}>
+                Resetting all data is irreversible. All sessions, QC checks, and team members will be erased and replaced with seed data.
+              </p>
+              <Btn variant="danger" onClick={() => setConfirmReset(true)}><RotateCcw size={14} /> Reset All Data</Btn>
+            </div>
           </div>
         </div>
-      </div>
+      )}
 
       {/* Reset Confirmation Dialog */}
       {confirmReset && (
