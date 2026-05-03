@@ -191,6 +191,11 @@ export function reducer(state, action) {
       break;
     }
 
+    case 'SET_DAILY_TARGET_OVERRIDE': {
+      next = { ...state, meta: { ...state.meta, dailyTargetOverride: action.payload } };
+      break;
+    }
+
     case 'SET_TARGET': {
       next = {
         ...state,

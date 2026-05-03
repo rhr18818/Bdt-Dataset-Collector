@@ -2,13 +2,14 @@ import { useState } from 'react';
 import { Settings, X } from 'lucide-react';
 import { Btn } from './ui/index.jsx';
 
-export default function SettingsPanel({ state, dispatch, onClose }) {
+export default function SettingsPanel({ state, dispatch, onClose, currentUser, computed }) {
   const { meta, targets } = state;
   const [deadline, setDeadline] = useState(meta.deadline ? meta.deadline.slice(0, 10) : '');
   const [targetA, setTargetA] = useState(targets.A);
   const [targetB, setTargetB] = useState(targets.B);
   const [targetC, setTargetC] = useState(targets.C);
   const [targetD, setTargetD] = useState(targets.D);
+  const [dailyTargetOverride, setDailyTargetOverride] = useState(meta.dailyTargetOverride || '');
 
   function save() {
     if (deadline) dispatch({ type: 'SET_DEADLINE', payload: { deadline: new Date(deadline).toISOString() } });
@@ -16,8 +17,28 @@ export default function SettingsPanel({ state, dispatch, onClose }) {
     if (targetB !== targets.B) dispatch({ type: 'SET_TARGET', payload: { key: 'B', value: parseInt(targetB) } });
     if (targetC !== targets.C) dispatch({ type: 'SET_TARGET', payload: { key: 'C', value: parseInt(targetC) } });
     if (targetD !== targets.D) dispatch({ type: 'SET_TARGET', payload: { key: 'D', value: parseInt(targetD) } });
+    
+    // Save dailyTargetOverride
+    const overrideVal = dailyTargetOverride === '' ? null : Number(dailyTargetOverride);
+    dispatch({ type: 'SET_DAILY_TARGET_OVERRIDE', payload: overrideVal });
+    
     onClose();
   }
+
+  const isLead = currentUser?.role === 'lead';
+  
+  // Auto-calculated suggestion
+  const totalTarget = (targets.A || 0) + (targets.B || 0) + (targets.C || 0) + (targets.D || 0);
+  const remainingImages = Math.max(0, totalTarget - (computed?.totalCollected || 0));
+  let remainingDays = 30; // fallback
+  if (deadline) {
+    const startOfToday = new Date().setHours(0, 0, 0, 0);
+    const deadlineTime = new Date(deadline).getTime();
+    const daysDiff = Math.ceil((deadlineTime - startOfToday) / 86400000) + 1; // inclusive of today
+    if (daysDiff > 0) remainingDays = daysDiff;
+  }
+  const autoCalculatedTarget = remainingDays > 0 ? Math.ceil(remainingImages / remainingDays) : 0;
+
 
   return (
     <div className="fixed inset-0 z-50 flex justify-end" onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}
@@ -61,6 +82,23 @@ export default function SettingsPanel({ state, dispatch, onClose }) {
               ))}
             </div>
           </div>
+
+          {/* Daily Target Override (Lead Only) */}
+          {isLead && (
+            <div>
+              <p className="text-xs font-semibold uppercase mb-2" style={{ color: 'var(--text-muted)' }}>Daily image target</p>
+              <div className="flex gap-2">
+                <input type="number" min="1" value={dailyTargetOverride} onChange={e => setDailyTargetOverride(e.target.value)}
+                  className="flex-1 border rounded-lg px-3 py-2 text-sm focus:outline-none"
+                  style={{ borderColor: 'var(--border)' }} />
+                <Btn variant="secondary" onClick={() => setDailyTargetOverride('')}>Clear</Btn>
+              </div>
+              <p className="text-[11px] mt-2" style={{ color: 'var(--text-muted)', lineHeight: 1.4 }}>
+                Leave empty to auto-calculate from deadline and remaining images.<br/>
+                Auto-calculated suggestion: <strong>{autoCalculatedTarget}</strong>
+              </p>
+            </div>
+          )}
 
           {/* Project Info */}
           <div>

@@ -163,7 +163,7 @@ export default function App() {
       <QuickLogFAB team={isLead ? state.team : [currentUser]} currentUser={currentUser} onLog={handleLog} />
 
       {/* Settings Panel */}
-      {showSettings && <SettingsPanel state={state} dispatch={dispatch} onClose={() => setShowSettings(false)} />}
+      {showSettings && <SettingsPanel state={state} dispatch={dispatch} onClose={() => setShowSettings(false)} currentUser={currentUser} computed={computed} />}
 
       {/* Toast Container */}
       <ToastContainer toasts={toasts} />

@@ -101,9 +101,9 @@ export function Avatar({ member, size = 32 }) {
 // ─────────────────────────────────────────────
 // STAT CARD
 // ─────────────────────────────────────────────
-export function StatCard({ label, value, sub, progress, progressColor, badge, icon: Icon, accentColor }) {
+export function StatCard({ label, value, sub, progress, progressColor, badge, icon: Icon, accentColor, className, style }) {
   return (
-    <div className="rounded-xl p-5 flex flex-col gap-3 shadow-sm" style={{ background: 'var(--bg-card)', border: '1px solid var(--border)' }}>
+    <div className={`rounded-xl p-5 flex flex-col gap-3 shadow-sm ${className || ''}`} style={{ background: 'var(--bg-card)', border: '1px solid var(--border)', ...style }}>
       <div className="flex items-center justify-between">
         <p className="text-sm font-medium" style={{ color: 'var(--text-muted)', fontFamily: 'Inter, sans-serif' }}>{label}</p>
         {Icon && <div className="rounded-lg p-2" style={{ background: accentColor ? `${accentColor}18` : '#f3f4f6' }}><Icon size={18} style={{ color: accentColor || 'var(--text-muted)' }} /></div>}

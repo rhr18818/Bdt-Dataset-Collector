@@ -141,6 +141,58 @@ export function useComputed(state) {
       .sort((a, b) => b.timestamp.localeCompare(a.timestamp))
       .slice(0, 20);
 
+    // --- Today's Collections & Daily Targets ---
+    const collectedTodayByCategory = { A: 0, B: 0, C: 0, D: 0 };
+    for (const s of sessions) {
+      if (s.timestamp.slice(0, 10) === todayStr && s.category in collectedTodayByCategory) {
+        collectedTodayByCategory[s.category] += (Number(s.imageCount) || 0);
+      }
+    }
+    const totalCollectedToday = Object.values(collectedTodayByCategory).reduce((sum, v) => sum + v, 0);
+
+    const totalProjectTarget = (state.targets?.A || 0) + (state.targets?.B || 0) + (state.targets?.C || 0) + (state.targets?.D || 0);
+    
+    let rawDailyTarget = 30; // fallback
+    let isDeadlinePassed = false;
+    let noDeadline = !state.meta?.deadline;
+    
+    if (state.meta?.dailyTargetOverride && state.meta.dailyTargetOverride > 0) {
+      rawDailyTarget = state.meta.dailyTargetOverride;
+      noDeadline = false;
+    } else {
+      const remainingImages = Math.max(0, totalProjectTarget - totalCollected);
+      const deadline = state.meta?.deadline;
+
+      let remainingDays = 30;
+      if (deadline) {
+        const startOfToday = new Date().setHours(0, 0, 0, 0);
+        const deadlineTime = new Date(deadline).getTime();
+        const daysDiff = Math.ceil((deadlineTime - startOfToday) / 86400000) + 1; // inclusive of today
+        if (daysDiff <= 0) {
+          isDeadlinePassed = true;
+        } else {
+          remainingDays = daysDiff;
+        }
+      }
+      rawDailyTarget = Math.ceil(remainingImages / remainingDays);
+    }
+
+    let isHighSuggestedPace = false;
+    if (rawDailyTarget > 500 && (!state.meta?.dailyTargetOverride || state.meta.dailyTargetOverride <= 0)) {
+      isHighSuggestedPace = true;
+      rawDailyTarget = 500;
+    }
+
+    // Split daily target: 4 categories evenly, remainder to B
+    const baseCatTarget = Math.floor(rawDailyTarget / 4);
+    const remainder = rawDailyTarget % 4;
+    const dailyTargets = {
+      A: baseCatTarget,
+      B: baseCatTarget + remainder,
+      C: baseCatTarget,
+      D: baseCatTarget,
+    };
+
     return {
       totalCollected,
       collectedByCategory,
@@ -162,6 +214,15 @@ export function useComputed(state) {
       memberStats,
       dailyActivity,
       todayFeed,
+      // Target specific
+      collectedTodayByCategory,
+      totalCollectedToday,
+      dailyTargets,
+      rawDailyTarget,
+      isDeadlinePassed,
+      noDeadline,
+      isHighSuggestedPace,
+      totalProjectTarget,
     };
   }, [state]);
 }

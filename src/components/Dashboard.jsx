@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { BarChart, Bar, LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell } from 'recharts';
-import { TrendingUp, Target, CheckCircle, Clock, ChevronDown, ChevronRight } from 'lucide-react';
+import { TrendingUp, Target, CheckCircle, Clock, ChevronDown, ChevronRight, Activity } from 'lucide-react';
 import { StatCard, ProgressBar, Badge, EmptyState } from './ui/index.jsx';
 import { CATEGORY_LABELS, CATEGORY_DESCRIPTIONS } from '../data/seedData.js';
 
@@ -37,6 +37,7 @@ function CategoryRow({ cat, collected, targets, sessions }) {
           <div className="flex items-center gap-2 flex-wrap">
             <p className="font-semibold text-sm" style={{ color: 'var(--text-primary)' }}>{CATEGORY_LABELS[cat]}</p>
             {getStatusBadge(collected, target)}
+            <span className="text-xs ml-auto" style={{ color: 'var(--text-muted)' }}>{Math.max(0, target - collected).toLocaleString()} remaining</span>
           </div>
           <p className="text-xs mt-0.5 mb-2" style={{ color: 'var(--text-muted)' }}>{CATEGORY_DESCRIPTIONS[cat]}</p>
           <ProgressBar value={collected} max={target} color={CATEGORY_COLORS[cat]} height={6} />
@@ -69,9 +70,18 @@ function CategoryRow({ cat, collected, targets, sessions }) {
   );
 }
 
-export default function Dashboard({ state, computed }) {
-  const { totalCollected, collectedByCategory, dailyActivity, todayFeed, totalAnnotated, totalApproved } = computed;
+export default function Dashboard({ state, computed, currentUser }) {
+  const { 
+    totalCollected, collectedByCategory, dailyActivity, todayFeed, totalAnnotated, totalApproved,
+    collectedTodayByCategory, totalCollectedToday, dailyTargets, rawDailyTarget,
+    isDeadlinePassed, noDeadline, isHighSuggestedPace, totalProjectTarget
+  } = computed;
   const { meta, sessions, team } = state;
+
+  const todayStr = new Date().toISOString().slice(0, 10);
+  const userCollectedToday = sessions
+    .filter(s => s.memberId === currentUser?.id && s.timestamp.slice(0, 10) === todayStr)
+    .reduce((sum, s) => sum + (Number(s.imageCount) || 0), 0);
 
   // Days remaining
   const daysLeft = meta.deadline
@@ -100,10 +110,49 @@ export default function Dashboard({ state, computed }) {
     return () => clearInterval(interval);
   }, []);
 
+  // Dynamic color for "Today's Target" based on progress
+  const targetPct = rawDailyTarget > 0 ? userCollectedToday / rawDailyTarget : 0;
+  let targetColor = '#ef4444'; // 0% = Red
+  if (targetPct >= 1) targetColor = '#10B981'; // >= 100% = Green
+  else if (targetPct >= 0.75) targetColor = '#3b82f6'; // >= 75% = Blue
+  else if (targetPct >= 0.4) targetColor = '#eab308'; // >= 40% = Yellow
+  else if (targetPct > 0) targetColor = '#f97316'; // > 0% = Orange
+  
+  const hexToRgb = (hex) => {
+    // Basic hex to rgb for rgba usage
+    const h = hex.startsWith('#') ? hex.slice(1) : hex;
+    const r = parseInt(h.slice(0, 2), 16);
+    const g = parseInt(h.slice(2, 4), 16);
+    const b = parseInt(h.slice(4, 6), 16);
+    return `${r}, ${g}, ${b}`;
+  };
+  const targetRgb = hexToRgb(targetColor);
+
   return (
     <div className="p-4 md:p-6 flex flex-col gap-6">
+      <style>{`
+        @keyframes subtle-pulse {
+          0% { box-shadow: 0 0 0 0 rgba(${targetRgb}, 0.5); }
+          70% { box-shadow: 0 0 0 10px rgba(${targetRgb}, 0); }
+          100% { box-shadow: 0 0 0 0 rgba(${targetRgb}, 0); }
+        }
+        .highlight-today-card {
+          animation: subtle-pulse 2.5s cubic-bezier(0.4, 0, 0.6, 1) 3;
+          border: 2px solid ${targetColor} !important;
+        }
+      `}</style>
       {/* STAT CARDS */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-2 lg:grid-cols-5 gap-4">
+        <StatCard
+          label="Today's Target"
+          value={userCollectedToday.toLocaleString()}
+          sub={`of ${rawDailyTarget.toLocaleString()} daily target`}
+          icon={Activity}
+          accentColor={targetColor}
+          progress={{ value: userCollectedToday, max: Math.max(rawDailyTarget, 1) }}
+          progressColor={targetColor}
+          className="highlight-today-card"
+        />
         <StatCard
           label="Total Collected"
           value={totalCollected.toLocaleString()}
