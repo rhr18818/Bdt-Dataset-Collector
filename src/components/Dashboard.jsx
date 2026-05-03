@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { BarChart, Bar, LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell } from 'recharts';
-import { TrendingUp, Target, CheckCircle, Clock, ChevronDown, ChevronRight, Activity } from 'lucide-react';
+import { TrendingUp, Target, CheckCircle, Clock, ChevronDown, ChevronRight, Activity, Trophy, Medal, User, Users } from 'lucide-react';
 import { StatCard, ProgressBar, Badge, EmptyState } from './ui/index.jsx';
 import { CATEGORY_LABELS, CATEGORY_DESCRIPTIONS } from '../data/seedData.js';
 
@@ -102,6 +102,24 @@ export default function Dashboard({ state, computed, currentUser }) {
 
   // Total Target 
   const totalTarget = (state.targets.A || 0) + (state.targets.B || 0) + (state.targets.C || 0) + (state.targets.D || 0);
+
+  // Leaderboard data
+  const leaderboardData = team.map(m => ({
+    ...m,
+    collected: computed.memberStats[m.id]?.collected || 0
+  })).sort((a, b) => b.collected - a.collected);
+
+  const rankedLeaderboard = [];
+  let currentRank = 1;
+  for (let i = 0; i < leaderboardData.length; i++) {
+    if (i > 0 && leaderboardData[i].collected < leaderboardData[i - 1].collected) {
+      currentRank = i + 1;
+    }
+    rankedLeaderboard.push({
+      ...leaderboardData[i],
+      rank: currentRank
+    });
+  }
 
   // Auto-refresh every 30 seconds
   const [tick, setTick] = useState(0);
@@ -259,6 +277,72 @@ export default function Dashboard({ state, computed, currentUser }) {
                     {s.groundTruthSum > 0 && <span style={{ color: 'var(--text-muted)' }}> — ৳{s.groundTruthSum} total</span>}
                   </p>
                   <span className="flex-shrink-0" style={{ width: 8, height: 8, borderRadius: '50%', background: CATEGORY_COLORS[s.category], display: 'inline-block' }} />
+                </div>
+              );
+            })
+          )}
+        </div>
+      </div>
+
+      {/* LEADERBOARD CARD */}
+      <div className="rounded-xl shadow-sm" style={{ background: '#fff', border: '1px solid var(--border)' }}>
+        <div className="px-5 py-4 border-b flex items-center gap-2" style={{ borderColor: 'var(--border)' }}>
+          <Trophy size={18} style={{ color: 'var(--text-primary)' }} />
+          <p className="font-semibold text-sm" style={{ color: 'var(--text-primary)', fontFamily: 'Inter, sans-serif' }}>Contributors</p>
+        </div>
+        <div className="divide-y max-h-96 overflow-y-auto" style={{ divideColor: 'var(--border)' }}>
+          {totalCollected === 0 ? (
+            <div className="flex flex-col items-center justify-center p-8 text-center">
+              <Users size={32} className="mb-3" style={{ color: 'var(--text-muted)' }} />
+              <p className="text-sm" style={{ color: 'var(--text-muted)' }}>No contributions yet — start logging to appear here</p>
+            </div>
+          ) : (
+            rankedLeaderboard.map((member) => {
+              const isCurrentUser = member.id === currentUser?.id;
+              let BadgeIcon = User;
+              let badgeColor = 'var(--text-muted)';
+              let labelText = "Contribute More";
+              let labelBg = "#f3f4f6";
+              let labelColor = "#4b5563";
+
+              if (member.rank === 1) {
+                BadgeIcon = Medal;
+                badgeColor = '#F59E0B';
+                labelText = "Top Contributor";
+                labelBg = "#dcfce7"; labelColor = "#166534";
+              } else if (member.rank === 2) {
+                BadgeIcon = Medal;
+                badgeColor = '#9CA3AF';
+                labelText = "Runner Up";
+                labelBg = "#dbeafe"; labelColor = "#1e40af";
+              } else if (member.rank === 3) {
+                BadgeIcon = Medal;
+                badgeColor = '#B45309';
+                labelText = "3rd Place";
+                labelBg = "#fef3c7"; labelColor = "#92400e";
+              } else if (member.rank === 4) {
+                labelText = "Keep Going";
+              }
+
+              return (
+                <div key={member.id} className="flex items-center gap-4 px-5 py-3 transition-colors" style={{ backgroundColor: isCurrentUser ? '#f8fafc' : 'transparent' }}>
+                  <div className="text-sm font-bold font-mono w-6 text-center" style={{ color: 'var(--text-muted)' }}>
+                    #{member.rank}
+                  </div>
+                  <BadgeIcon size={20} style={{ color: badgeColor }} className="flex-shrink-0" />
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-medium truncate" style={{ color: 'var(--text-primary)', fontFamily: 'Inter, sans-serif' }}>
+                      {member.name || 'Unknown'}
+                    </p>
+                    <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full mt-0.5 inline-block" style={{ backgroundColor: labelBg, color: labelColor }}>
+                      {labelText}
+                    </span>
+                  </div>
+                  <div className="text-right">
+                    <p className="font-bold font-mono text-base" style={{ color: 'var(--text-primary)' }}>
+                      {member.collected.toLocaleString()}
+                    </p>
+                  </div>
                 </div>
               );
             })
