@@ -10,6 +10,12 @@ export default function Login({ team, onLogin }) {
   function handleSubmit(e) {
     if (e) e.preventDefault();
     const cleanInput = accessId.trim().toLowerCase();
+    
+    if (cleanInput === 'viewer') {
+      onLogin({ id: 'viewer', isViewer: true, name: 'Guest Viewer', role: 'viewer' });
+      return;
+    }
+
     const member = team.find(m => m.accessId?.toLowerCase() === cleanInput);
     if (member) {
       onLogin(member);
@@ -106,6 +112,22 @@ export default function Login({ team, onLogin }) {
           </Btn>
           
         </form>
+
+        <div className="border-t px-4 py-3 flex flex-col items-center" style={{ borderColor: 'var(--border)', background: 'var(--bg-surface)' }}>
+          <p className="text-sm font-semibold" style={{ color: 'var(--text-primary)' }}>Want to explore the app?</p>
+          <p className="text-xs text-center mb-2" style={{ color: 'var(--text-muted)', maxWidth: '280px' }}>
+            Use Access ID: <span className="font-mono bg-gray-100 px-1 rounded">viewer</span>
+          </p>
+          {/* <p className='text-sm font-semibold mb-1'style={{ color: 'var(--text-primary)' }}>OR</p> */}
+          <button 
+            type="button" 
+            onClick={() => onLogin({ id: 'viewer', isViewer: true, name: 'Guest Viewer', role: 'viewer' })}
+            className="text-sm font-bold flex items-center gap-1 hover:underline transition-all mb-2" 
+            style={{ color: 'var(--accent)' }}
+          >
+            View as Guest &rarr;
+          </button>
+        </div>
       </div>
     </div>
   );

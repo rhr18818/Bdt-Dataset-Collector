@@ -6,7 +6,7 @@ import { ENVIRONMENTS, LIGHTING } from '../data/seedData.js';
 
 const DENOM_COLORS = { 2: '#64748b', 5: '#f43f5e', 10:'#2563eb', 20:'#16a34a', 50:'#d97706', 100:'#7c3aed', 200:'#0891b2', 500:'#db2777', 1000:'#65a30d' };
 
-export default function ExportReport({ state, computed, dispatch, currentUser }) {
+export default function ExportReport({ state, computed, dispatch, currentUser, addToast }) {
   const [confirmReset, setConfirmReset] = useState(false);
   const [resetInput, setResetInput] = useState('');
   const [copied, setCopied] = useState(false);
@@ -41,6 +41,10 @@ export default function ExportReport({ state, computed, dispatch, currentUser })
   for (const m of team) memberById[m.id] = m;
 
   function exportProgressCSV() {
+    if (currentUser?.isViewer) {
+      addToast('View-only mode — sign in with your account to make changes', 'error');
+      return;
+    }
     const headers = ['ID','Timestamp','Member','Category','Subcategory','Denominations','Sum','Conditions','Environments','Lighting','Arrangements','Images','Status'];
     const rows = sessions.map(s => [
       s.id, s.timestamp, memberById[s.memberId]?.name, s.category, s.subcategory,
@@ -52,6 +56,10 @@ export default function ExportReport({ state, computed, dispatch, currentUser })
   }
 
   function exportMetadataCSV() {
+    if (currentUser?.isViewer) {
+      addToast('View-only mode — sign in with your account to make changes', 'error');
+      return;
+    }
     const headers = ['SessionID','Date','Collector','Category','Subcategory','Denominations','GroundTruthSum','Conditions','Environment','Lighting','Arrangements','Background','ImageCount','Status','Notes'];
     const rows = sessions.map(s => [
       s.id, s.timestamp.slice(0,10), memberById[s.memberId]?.name,
@@ -63,6 +71,10 @@ export default function ExportReport({ state, computed, dispatch, currentUser })
   }
 
   function exportQCCSV() {
+    if (currentUser?.isViewer) {
+      addToast('View-only mode — sign in with your account to make changes', 'error');
+      return;
+    }
     const headers = ['ID','Date','Reviewer','Annotator','BatchSize','Errors','Agreement%','ErrorTypes','Action','Notes'];
     const rows = qcChecks.map(q => [
       q.id, q.timestamp.slice(0,10), memberById[q.reviewerId]?.name, memberById[q.annotatorId]?.name,

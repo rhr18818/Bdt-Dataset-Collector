@@ -22,10 +22,10 @@ export default function Layout({ activeView, setActiveView, totalCollected, targ
   const today = new Date().toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' });
   const totalTarget = targets ? (targets.A || 0) + (targets.B || 0) + (targets.C || 0) + (targets.D || 0) : 26000;
   const pct = totalTarget > 0 ? Math.round((totalCollected / totalTarget) * 100) : 0;
-  const isLead = currentUser?.role === 'lead';
+  const isLead = currentUser?.role === 'lead' || currentUser?.isViewer;
 
   return (
-    <div className="flex h-screen overflow-hidden" style={{ background: 'var(--bg-surface)' }}>
+    <div className="flex h-full w-full overflow-hidden" style={{ background: 'var(--bg-surface)' }}>
       {/* Mobile Backdrop */}
       {mobileMenuOpen && (
         <div className="md:hidden fixed inset-0 z-40 bg-black/50" onClick={() => setMobileMenuOpen(false)} />

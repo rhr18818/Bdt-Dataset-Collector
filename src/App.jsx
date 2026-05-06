@@ -1,4 +1,5 @@
 import { useReducer, useCallback, useState, useEffect } from 'react';
+import { Eye } from 'lucide-react';
 import { loadState, reducer } from './data/reducer.js';
 import { INITIAL_STATE } from './data/seedData.js';
 import { useComputed } from './hooks/useComputed.js';
@@ -27,6 +28,12 @@ export default function App() {
   const [showSettings, setShowSettings] = useState(false);
   const [dbConnected, setDbConnected] = useState(false);
 
+  // Auth state
+  const [currentUserId, setCurrentUserId] = useState(() => localStorage.getItem('bdt_currentUser'));
+  const currentUser = currentUserId === 'viewer'
+    ? { id: 'viewer', name: 'Guest Viewer', role: 'viewer', isViewer: true, initials: 'V', color: '#92400e' }
+    : state.team.find(m => m.id === currentUserId);
+
   // Firestore Synchronization
   useEffect(() => {
     // 1. Sync global metadata
@@ -36,8 +43,10 @@ export default function App() {
         setDbConnected(true);
       } else {
         // First ever launch — initialize the cloud DB
-        const { sessions, ...metaState } = INITIAL_STATE;
-        setDoc(doc(db, "bdt_db", "metaState"), metaState);
+        if (currentUserId !== 'viewer') {
+          const { sessions, ...metaState } = INITIAL_STATE;
+          setDoc(doc(db, "bdt_db", "metaState"), metaState);
+        }
       }
     });
 
@@ -50,15 +59,11 @@ export default function App() {
     });
 
     return () => { unsubMeta(); unsubSessions(); };
-  }, []);
+  }, [currentUserId]);
   
-  // Auth state
-  const [currentUserId, setCurrentUserId] = useState(() => localStorage.getItem('bdt_currentUser'));
-  const currentUser = state.team.find(m => m.id === currentUserId);
-
   // Auto-logout if user is deleted remotely/by reset
   useEffect(() => {
-    if (currentUserId && !currentUser) {
+    if (currentUserId && !currentUser && currentUserId !== 'viewer') {
       setCurrentUserId(null);
       localStorage.removeItem('bdt_currentUser');
     }
@@ -82,6 +87,16 @@ export default function App() {
     setTimeout(() => setToasts(prev => prev.filter(t => t.id !== id)), 3500);
   }, []);
 
+  const safeDispatch = useCallback((action) => {
+    if (currentUserId === 'viewer') {
+      if (action.type !== 'HYDRATE_META' && action.type !== 'HYDRATE_SESSIONS' && action.type !== 'DISMISS_ONBOARDING') {
+        addToast('View-only mode — sign in with your account to make changes', 'error');
+        return;
+      }
+    }
+    dispatch(action);
+  }, [currentUserId, dispatch, addToast]);
+
   // Handle "Add Images" button in topbar → go to collection view
   const handleAddImages = useCallback(() => setActiveView('collection'), []);
 
@@ -93,33 +108,48 @@ export default function App() {
 
   // Log session handler — used by CollectionTasks and QuickLogFAB
   const handleLog = useCallback((payload) => {
+    if (currentUserId === 'viewer') {
+      addToast('View-only mode — sign in with your account to make changes', 'error');
+      return;
+    }
     const id = crypto.randomUUID ? crypto.randomUUID() : Math.random().toString(36).slice(2);
     const timestamp = new Date().toISOString();
     const finalPayload = { ...payload, id, timestamp };
     
-    dispatch({ type: 'ADD_SESSION', payload: finalPayload });
+    safeDispatch({ type: 'ADD_SESSION', payload: finalPayload });
     const catLabels = { A: 'Single Note', B: 'Multi-Note', C: 'Occlusion', D: 'Env/Light' };
     const newTotal = computed.totalCollected + (Number(payload.imageCount) || 0);
     addToast(`✓ Logged ${payload.imageCount} images — ${catLabels[payload.category]} · ${payload.subcategory || ''} — Total: ${newTotal.toLocaleString()}`);
-  }, [computed.totalCollected, addToast]);
+  }, [computed.totalCollected, addToast, currentUserId, safeDispatch]);
 
   // Onboarding card (first launch)
   const [showOnboarding, setShowOnboarding] = useState(!state.meta.onboardingDismissed);
   function dismissOnboarding() {
-    dispatch({ type: 'DISMISS_ONBOARDING' });
+    safeDispatch({ type: 'DISMISS_ONBOARDING' });
     setShowOnboarding(false);
   }
 
-  const viewProps = { state, computed, dispatch, currentUser };
+  const viewProps = { state, computed, dispatch: safeDispatch, currentUser, addToast };
 
   if (!currentUser) {
     return <Login team={state.team} onLogin={handleLogin} />;
   }
 
-  const isLead = currentUser.role === 'lead';
+  const isLead = currentUser.role === 'lead' || currentUser.isViewer;
 
   return (
-    <>
+    <div className="flex flex-col h-screen w-full">
+      {currentUser.isViewer && (
+        <div className="w-full flex items-center justify-center gap-3 px-4 py-1.5 text-xs z-50 shrink-0 shadow-sm" style={{ background: '#FEF3C7', color: '#92400E' }}>
+          <Eye size={14} />
+          <span className="font-semibold">Viewing as guest</span>
+          <button onClick={handleLogout} className="font-bold hover:underline mx-2 ">
+            Sign in &rarr;
+          </button>
+          <span className="font-semibold">to contribute</span>
+        </div>
+      )}
+      <div className="flex-1 relative overflow-hidden">
       <Layout
         activeView={activeView}
         setActiveView={handleSetView}
@@ -163,10 +193,11 @@ export default function App() {
       <QuickLogFAB team={isLead ? state.team : [currentUser]} currentUser={currentUser} onLog={handleLog} />
 
       {/* Settings Panel */}
-      {showSettings && <SettingsPanel state={state} dispatch={dispatch} onClose={() => setShowSettings(false)} currentUser={currentUser} computed={computed} />}
+      {showSettings && <SettingsPanel state={state} dispatch={safeDispatch} onClose={() => setShowSettings(false)} currentUser={currentUser} computed={computed} />}
 
       {/* Toast Container */}
       <ToastContainer toasts={toasts} />
-    </>
+      </div>
+    </div>
   );
 }
