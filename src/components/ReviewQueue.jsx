@@ -129,7 +129,7 @@ export default function ReviewQueue({ state, computed, currentUser, dispatch }) 
                       <span className="px-1.5 py-0.5 rounded font-bold text-white text-xs" style={{ background: { A:'#2563eb', B:'#d97706', C:'#7c3aed', D:'#0891b2' }[s.category] }}>{s.category}</span>
                     </td>
                     <td className="px-4 py-3 font-mono" style={{ color: 'var(--text-primary)', maxWidth: 140, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                      {s.subcategory || '—'}
+                      {s.category === 'B' && s.subcategory && s.groundTruthSum !== undefined ? `${s.groundTruthSum} = ${s.subcategory}` : (s.subcategory || '—')}
                     </td>
                     <td className="px-4 py-3 font-mono font-bold" style={{ color: 'var(--text-primary)' }}>{s.imageCount.toLocaleString()}</td>
                     <td className="px-4 py-3 text-center">
