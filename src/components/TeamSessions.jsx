@@ -404,7 +404,9 @@ export default function TeamSessions({ state, computed, dispatch, currentUser })
                     <td className="px-4 py-2">
                       <span className="px-1.5 py-0.5 rounded text-white font-bold text-xs" style={{ background: { A:'#2563eb', B:'#d97706', C:'#7c3aed', D:'#0891b2' }[s.category] }}>{s.category}</span>
                     </td>
-                    <td className="px-4 py-2 font-mono" style={{ maxWidth: 140, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{s.subcategory}</td>
+                    <td className="px-4 py-2 font-mono" style={{ maxWidth: 140, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                      {s.category === 'B' && s.subcategory && s.groundTruthSum !== undefined ? `${s.groundTruthSum}=${s.subcategory}` : (s.subcategory || '—')}
+                    </td>
                     <td className="px-4 py-2 font-mono font-bold">{s.imageCount}</td>
                     <td className="px-4 py-2"><Badge variant={{ collected:'default', annotated:'warning', reviewed:'blue', approved:'success' }[s.status]}>{s.status}</Badge></td>
                     <td className="px-4 py-2 max-w-xs truncate" style={{ color: 'var(--text-muted)' }}>{s.notes || '—'}</td>
